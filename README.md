@@ -68,11 +68,25 @@ moattung/
 - **허브 워커는 하위 앱 경로를 절대 가로채지 않는다.** 허브의 scope(`/moattung/`)가
   앱 경로까지 포함하기 때문에, 가로채면 앱 진입이 깨질 수 있다.
   (`sw.js`의 `isHubScoped()` 참고)
-- **Cache Storage는 origin 전체가 공유한다.** 세 앱의 워커는 `activate` 때
-  "내 것이 아닌 캐시 전부 삭제"를 하므로, 어느 앱이 새 버전으로 바뀌면 다른 앱과
-  허브의 오프라인 캐시가 지워진다(앱을 다시 열면 네트워크에서 받아 복구된다).
-  합치기 전에도 같은 origin이었으므로 새로 생긴 문제는 아니다.
-  허브 워커는 이 짓을 하지 않고 `moattung-hub-` 로 시작하는 자기 캐시만 정리한다.
+- **다했텅의 공유 대상(share-target)은 등록 scope 기준으로 매칭한다.**
+  `dahaettung/sw.js`의 `SHARE_TARGET_PATH`가 `self.registration.scope`에서 계산되고,
+  manifest의 `share_target.action`(`./share-target`)도 manifest 위치 기준 상대경로라
+  둘이 같은 주소(`/moattung/dahaettung/share-target`)로 해석된다. 앱을 다른 경로로
+  옮기더라도 이 둘은 자동으로 같이 움직인다.
+- **Cache Storage는 origin 전체가 공유한다.** 그래서 네 워커 모두 `activate` 때
+  자기 접두어로 시작하는 옛 버전 캐시만 지운다. 새 캐시 이름을 지을 때는 반드시
+  아래 접두어를 지켜야 한다.
+
+  | 워커 | 접두어 | 현재 캐시 |
+  |---|---|---|
+  | 허브 | `moattung-hub-` | `moattung-hub-v1` |
+  | 다했텅 | `dahaettung-` | `dahaettung-v169` |
+  | 다썼텅 | `dasseottung-` | `dasseottung-v63` (+ `dasseottung-push-data`는 버전 정리 대상 아님) |
+  | 다뺐텅 | `dameoktung-` | `dameoktung-v143` (옛 이름이지만 바꾸면 기존 캐시가 무효화된다) |
+
+  원래는 `k !== CACHE` 로 "내 것이 아닌 캐시 전부 삭제"를 해서, 한 앱이 새 버전으로
+  바뀌면 다른 앱과 허브의 오프라인 캐시까지 통째로 지워졌다(합치기 전에도 같은
+  origin이라 원래 그랬다). 접두어 방식으로 바꿔서 해결했다.
 
 ## 원본 저장소
 

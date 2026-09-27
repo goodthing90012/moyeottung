@@ -1,5 +1,6 @@
 /* 다뺐텅 service worker */
 const CACHE = "dameoktung-v143";
+const CACHE_PREFIX = "dameoktung-"; // 이 앱이 만든 캐시만 골라내는 접두어 (옛 이름 그대로)
 const ASSETS = [
   "./",
   "./index.html",
@@ -17,7 +18,13 @@ self.addEventListener("install", (e) => {
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+      // Cache Storage는 origin 전체가 공유된다. 같은 주소에 있는 다른 텅 앱과 허브의
+      // 캐시까지 지우지 않도록, 내 접두어로 시작하는 옛 버전만 삭제한다.
+      Promise.all(
+        keys
+          .filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE)
+          .map((k) => caches.delete(k))
+      )
     )
   );
   self.clients.claim();

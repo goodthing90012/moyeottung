@@ -10,6 +10,7 @@
 //    여기서는 'moattung-hub-' 로 시작하는 옛 캐시만 지운다.
 
 const CACHE = 'moattung-hub-v1';
+const CACHE_PREFIX = 'moattung-hub-';               // 이 허브가 만든 캐시만 골라내는 접두어
 
 // 허브 화면이 카드에 띄우는 각 앱 캐릭터 이미지.
 // 하위 폴더에 있지만 이 셋만은 예외로 허용한다 (오프라인에서도 카드가 보이게).
@@ -59,7 +60,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
     await Promise.all(
-      keys.filter((k) => k.startsWith('moattung-hub-') && k !== CACHE).map((k) => caches.delete(k))
+      keys.filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE).map((k) => caches.delete(k))
     );
     await self.clients.claim();
   })());

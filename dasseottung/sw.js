@@ -3,6 +3,7 @@
 // (자동 강제 업데이트는 오프라인 캐시 리스크 때문에 도입하지 않음 → skipWaiting 미사용)
 
 const CACHE = 'dasseottung-v63';
+const CACHE_PREFIX = 'dasseottung-';               // 이 앱이 만든 캐시만 골라내는 접두어
 const PUSH_DATA_CACHE = 'dasseottung-push-data';   // 알림용 루틴 스냅샷 (버전 정리 대상 아님)
 const PUSH_SNAPSHOT_URL = './__routine-push-snapshot';
 
@@ -25,7 +26,14 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter((k) => k !== CACHE && k !== PUSH_DATA_CACHE).map((k) => caches.delete(k)));
+    // Cache Storage는 origin 전체가 공유된다. 같은 주소에 있는 다른 텅 앱과 허브의
+    // 캐시까지 지우지 않도록, 내 접두어로 시작하는 옛 버전만 삭제한다.
+    // (PUSH_DATA_CACHE도 같은 접두어라 따로 제외한다 — 알림 스냅샷은 버전 정리 대상이 아님)
+    await Promise.all(
+      keys
+        .filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE && k !== PUSH_DATA_CACHE)
+        .map((k) => caches.delete(k))
+    );
     await self.clients.claim();
   })());
 });

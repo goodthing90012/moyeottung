@@ -1,4 +1,5 @@
 const CACHE_NAME = 'dahaettung-v169';
+const CACHE_PREFIX = 'dahaettung-';                // 이 앱이 만든 캐시만 골라내는 접두어
 
 const ASSETS = [
   './',
@@ -29,7 +30,13 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      // Cache Storage는 origin 전체가 공유된다. 같은 주소에 있는 다른 텅 앱과 허브의
+      // 캐시까지 지우지 않도록, 내 접두어로 시작하는 옛 버전만 삭제한다.
+      Promise.all(
+        keys
+          .filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME)
+          .map((k) => caches.delete(k))
+      )
     )
   );
   self.clients.claim();
@@ -38,6 +45,12 @@ self.addEventListener('activate', (e) => {
 // ── 공유 대상(Share Target): 다른 앱에서 "다했텅"으로 사진을 공유했을 때 받는 곳 ──
 // GitHub Pages는 정적 호스팅이라 서버 코드가 없어서, 서비스워커가 POST를 직접 가로채 처리한다.
 const SHARE_DB_NAME = 'dahaettung-share-tmp';
+
+// 공유 대상 경로는 이 워커의 등록 scope 기준으로 계산한다.
+// (예: scope가 /moattung/dahaettung/ 이면 /moattung/dahaettung/share-target)
+// manifest의 "share_target": { "action": "./share-target" } 도 manifest 위치 기준
+// 상대경로라 같은 주소로 해석된다 — 둘이 어긋나면 공유가 앱까지 도달하지 못한다.
+const SHARE_TARGET_PATH = new URL('share-target', self.registration.scope).pathname;
 function openShareDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(SHARE_DB_NAME, 1);
@@ -63,14 +76,14 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
 
   // 다른 앱의 공유 시트에서 "다했텅"을 선택했을 때 오는 요청
-  if (e.request.method === 'POST' && url.pathname.endsWith('/share-target')) {
+  if (e.request.method === 'POST' && url.pathname === SHARE_TARGET_PATH) {
     e.respondWith((async () => {
       try {
         const formData = await e.request.formData();
         const files = formData.getAll('photos').filter((f) => f && typeof f === 'object' && f.size > 0);
         if (files.length) await storePendingShareFiles(files);
       } catch (err) { /* 실패해도 앱은 정상적으로 열리게 그냥 진행 */ }
-      return Response.redirect('./?shared=1', 303);
+      return Response.redirect(new URL('./?shared=1', self.registration.scope).href, 303);
     })());
     return;
   }
