@@ -9,7 +9,7 @@
 //    "내 것 아닌 캐시 전부 삭제"를 하면 세 앱의 오프라인 캐시를 날려버린다.
 //    여기서는 'moyeottung-hub-' 로 시작하는 옛 캐시만 지운다.
 
-const CACHE = 'moyeottung-hub-v1';
+const CACHE = 'moyeottung-hub-v2';
 const CACHE_PREFIX = 'moyeottung-hub-';             // 이 허브가 만든 캐시만 골라내는 접두어
 
 // 허브 화면이 카드에 띄우는 각 앱 캐릭터 이미지.
