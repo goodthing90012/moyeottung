@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>모였텅 - 텅 유니버스</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" href="icon-192.png" type="image/png">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <meta name="theme-color" content="#22B07D">
     <meta name="description" content="다썼텅·다했텅·다뺐텅 — 텅 유니버스 앱이 한곳에 모였텅">
     <meta name="mobile-web-app-capable" content="yes">
@@ -67,9 +68,9 @@
         .hero { text-align: center; padding: 14px 0 26px; }
         .hero-icon {
             width: 84px; height: 84px;
-            border-radius: 24px;
             display: block; margin: 0 auto 14px;
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10);
+            /* 배경이 없는 캐릭터라 사각 그림자 대신 형태를 따라가는 그림자를 쓴다 */
+            filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.12));
         }
         .hero h1 {
             margin: 0;
@@ -171,7 +172,7 @@
 <body>
     <div class="wrap">
         <header class="hero">
-            <img class="hero-icon" src="icon-192.png" alt="모였텅" width="84" height="84">
+            <img class="hero-icon" src="character.png" alt="모였텅" width="84" height="84">
             <h1>모였텅</h1>
             <p>텅 유니버스 앱이 한곳에 모였텅 🫙</p>
         </header>
