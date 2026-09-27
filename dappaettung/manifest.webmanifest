@@ -1,0 +1,16 @@
+{
+  "name": "다뺐텅 · 칼로리 텅장",
+  "short_name": "다뺐텅",
+  "description": "칼로리를 통장처럼 관리하는 기록 앱",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef3f9",
+  "theme_color": "#4c9feb",
+  "lang": "ko",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
