@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>모았텅 - 텅 유니버스</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#22B07D">
+    <meta name="description" content="다썼텅·다했텅·다뺐텅 — 텅 유니버스 앱을 한곳에 모았텅">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="모았텅">
+    <style>
+        :root {
+            --bg: #FBF8F6;
+            --card: #FFFFFF;
+            --text: #2B2B2B;
+            --gray: #8A8A8A;
+            --line: #F0ECE9;
+
+            --dasseottung: #FF5A5F;
+            --dasseottung-dark: #E0474C;
+            --dasseottung-tint: #FFF0F0;
+
+            --dahaettung: #22B07D;
+            --dahaettung-dark: #1B8F66;
+            --dahaettung-tint: #E8F8F1;
+
+            --dappaettung: #4C9FEB;
+            --dappaettung-dark: #3A82C8;
+            --dappaettung-tint: #EAF3FD;
+        }
+
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        /* 은은한 3색 배경 — 세 앱이 한 곳에 모인 느낌 */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(70% 45% at 12% 4%, rgba(255, 90, 95, 0.13), transparent 62%),
+                radial-gradient(70% 45% at 88% 22%, rgba(34, 176, 125, 0.13), transparent 62%),
+                radial-gradient(85% 50% at 50% 100%, rgba(76, 159, 235, 0.15), transparent 66%),
+                var(--bg);
+        }
+
+        .wrap {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 28px 18px calc(34px + env(safe-area-inset-bottom));
+        }
+
+        /* ── 헤더 ── */
+        .hero { text-align: center; padding: 14px 0 26px; }
+        .hero-icon {
+            width: 84px; height: 84px;
+            border-radius: 24px;
+            display: block; margin: 0 auto 14px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10);
+        }
+        .hero h1 {
+            margin: 0;
+            font-size: 30px; font-weight: 900;
+            letter-spacing: -1px;
+            color: var(--dahaettung);
+            background: linear-gradient(100deg, var(--dasseottung) 6%, var(--dahaettung) 52%, var(--dappaettung) 94%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p { margin: 7px 0 0; font-size: 13px; color: var(--gray); font-weight: 500; }
+
+        .section-title {
+            font-size: 12px; font-weight: 800; color: var(--gray);
+            letter-spacing: 0.4px; margin: 0 0 10px 4px;
+        }
+
+        /* ── 앱 카드 ── */
+        .apps { display: flex; flex-direction: column; gap: 13px; }
+
+        .app-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 15px 16px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            box-shadow: 0 5px 16px rgba(0, 0, 0, 0.055);
+            text-decoration: none; color: inherit;
+            position: relative; overflow: hidden;
+            transition: transform 0.14s ease, box-shadow 0.14s ease;
+        }
+        .app-card::before {
+            content: "";
+            position: absolute; left: 0; top: 0; bottom: 0;
+            width: 5px;
+            background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+        }
+        .app-card:active { transform: scale(0.975); box-shadow: 0 3px 9px rgba(0, 0, 0, 0.07); }
+
+        .app-char {
+            width: 62px; height: 62px; flex-shrink: 0;
+            border-radius: 17px;
+            background: var(--accent-tint);
+            object-fit: contain;
+        }
+        .app-body { flex: 1; min-width: 0; }
+        .app-name {
+            font-size: 18px; font-weight: 800; letter-spacing: -0.5px;
+            color: var(--accent-dark);
+            display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+        }
+        .app-tag {
+            font-size: 10px; font-weight: 700;
+            color: var(--accent-dark); background: var(--accent-tint);
+            padding: 3px 7px; border-radius: 6px; letter-spacing: 0;
+        }
+        .app-desc {
+            margin-top: 4px;
+            font-size: 12.5px; color: var(--gray); line-height: 1.45;
+            word-break: keep-all;
+        }
+        .app-go {
+            flex-shrink: 0; font-size: 19px; color: var(--accent);
+            opacity: 0.45; font-weight: 700;
+        }
+
+        .card-dasseottung { --accent: var(--dasseottung); --accent-dark: var(--dasseottung-dark); --accent-tint: var(--dasseottung-tint); }
+        .card-dahaettung  { --accent: var(--dahaettung);  --accent-dark: var(--dahaettung-dark);  --accent-tint: var(--dahaettung-tint); }
+        .card-dappaettung { --accent: var(--dappaettung); --accent-dark: var(--dappaettung-dark); --accent-tint: var(--dappaettung-tint); }
+
+        /* ── 설치 안내 ── */
+        #installBar {
+            display: none;
+            margin-top: 18px; padding: 13px 15px;
+            background: var(--card); border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            align-items: center; gap: 11px;
+        }
+        #installBar.show { display: flex; }
+        #installBar .txt { flex: 1; font-size: 12.5px; color: var(--gray); line-height: 1.45; word-break: keep-all; }
+        #installBar .txt b { color: var(--text); font-size: 13px; }
+        #installBtn {
+            flex-shrink: 0; border: none; cursor: pointer;
+            background: linear-gradient(135deg, var(--dahaettung) 0%, var(--dahaettung-dark) 100%);
+            color: #fff; font-weight: 800; font-size: 12.5px;
+            padding: 9px 15px; border-radius: 11px;
+        }
+        #installBtn:active { opacity: 0.85; }
+
+        .foot {
+            margin-top: 26px; text-align: center;
+            font-size: 11.5px; color: #B4AEAA; line-height: 1.6;
+        }
+        .foot .dots { font-size: 13px; letter-spacing: 3px; margin-bottom: 5px; }
+        .foot .dots i { font-style: normal; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header class="hero">
+            <img class="hero-icon" src="icon-192.png" alt="모았텅" width="84" height="84">
+            <h1>모았텅</h1>
+            <p>텅 유니버스 앱을 한곳에 모았텅 🫙</p>
+        </header>
+
+        <h2 class="section-title">앱 고르기</h2>
+        <nav class="apps">
+            <a class="app-card card-dahaettung" href="./dahaettung/">
+                <img class="app-char" src="./dahaettung/icon-192.png" alt="다했텅 캐릭터" width="62" height="62" loading="lazy">
+                <div class="app-body">
+                    <div class="app-name">다했텅 <span class="app-tag">루틴 · 일정</span></div>
+                    <div class="app-desc">매일의 루틴과 프로젝트·일정을 기록하고, 저녁마다 안 한 것을 알려줘요</div>
+                </div>
+                <div class="app-go">›</div>
+            </a>
+
+            <a class="app-card card-dasseottung" href="./dasseottung/">
+                <img class="app-char" src="./dasseottung/icon-192.png" alt="다썼텅 캐릭터" width="62" height="62" loading="lazy">
+                <div class="app-body">
+                    <div class="app-name">다썼텅 <span class="app-tag">화장품 재고</span></div>
+                    <div class="app-desc">화장품 재고를 관리하고 리필 타이밍을 똑똑하게 파악해요</div>
+                </div>
+                <div class="app-go">›</div>
+            </a>
+
+            <a class="app-card card-dappaettung" href="./dappaettung/">
+                <img class="app-char" src="./dappaettung/icon-192.png" alt="다뺐텅 캐릭터" width="62" height="62" loading="lazy">
+                <div class="app-body">
+                    <div class="app-name">다뺐텅 <span class="app-tag">칼로리 텅장</span></div>
+                    <div class="app-desc">칼로리를 통장처럼 넣고 빼면서 기록해요</div>
+                </div>
+                <div class="app-go">›</div>
+            </a>
+        </nav>
+
+        <div id="installBar">
+            <div class="txt"><b>홈 화면에 추가</b><br>모았텅을 앱처럼 열 수 있어요</div>
+            <button id="installBtn" type="button">추가하기</button>
+        </div>
+
+        <footer class="foot">
+            <div class="dots"><i style="color:#FF5A5F">●</i><i style="color:#22B07D">●</i><i style="color:#4C9FEB">●</i></div>
+            텅 유니버스 · 각 앱은 따로 설치해서 쓸 수도 있어요
+        </footer>
+    </div>
+
+    <script>
+        // 서비스워커 등록 — 상대경로라 /moattung/ 아래에서 이 폴더가 그대로 scope가 된다.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('./sw.js').catch(function (err) {
+                    console.log('허브 SW 등록 실패', err);
+                });
+            });
+        }
+
+        // '홈 화면에 추가' — 브라우저가 설치 가능하다고 알려줄 때만 버튼을 보여준다.
+        var deferredPrompt = null;
+        var installBar = document.getElementById('installBar');
+        var installBtn = document.getElementById('installBtn');
+
+        window.addEventListener('beforeinstallprompt', function (e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBar.classList.add('show');
+        });
+
+        installBtn.addEventListener('click', function () {
+            if (!deferredPrompt) { installBar.classList.remove('show'); return; }
+            deferredPrompt.prompt();
+            Promise.resolve(deferredPrompt.userChoice).catch(function () {}).then(function () {
+                deferredPrompt = null;
+                installBar.classList.remove('show');
+            });
+        });
+
+        window.addEventListener('appinstalled', function () {
+            deferredPrompt = null;
+            installBar.classList.remove('show');
+        });
+    </script>
+</body>
+</html>
