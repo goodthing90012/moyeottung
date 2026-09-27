@@ -1,16 +1,16 @@
-// 모았텅 허브 서비스워커
+// 모였텅 허브 서비스워커
 //
-// ⚠️ 이 워커의 등록 scope는 /moattung/ 이라서, 그대로 두면 하위 앱
-//    (/moattung/dahaettung/ 등)으로 들어가는 첫 요청까지 이 워커가 가로챈다.
+// ⚠️ 이 워커의 등록 scope는 /moyeottung/ 이라서, 그대로 두면 하위 앱
+//    (/moyeottung/dahaettung/ 등)으로 들어가는 첫 요청까지 이 워커가 가로챈다.
 //    각 앱은 자기 폴더에 자기 서비스워커를 따로 갖고 있으므로, 허브는
 //    **자기 폴더에 직접 있는 파일만** 처리하고 하위 폴더 요청은 전부 무시한다.
 //
 // ⚠️ 캐시 삭제도 마찬가지다. Cache Storage는 origin 전체가 공유하므로
 //    "내 것 아닌 캐시 전부 삭제"를 하면 세 앱의 오프라인 캐시를 날려버린다.
-//    여기서는 'moattung-hub-' 로 시작하는 옛 캐시만 지운다.
+//    여기서는 'moyeottung-hub-' 로 시작하는 옛 캐시만 지운다.
 
-const CACHE = 'moattung-hub-v1';
-const CACHE_PREFIX = 'moattung-hub-';               // 이 허브가 만든 캐시만 골라내는 접두어
+const CACHE = 'moyeottung-hub-v1';
+const CACHE_PREFIX = 'moyeottung-hub-';             // 이 허브가 만든 캐시만 골라내는 접두어
 
 // 허브 화면이 카드에 띄우는 각 앱 캐릭터 이미지.
 // 하위 폴더에 있지만 이 셋만은 예외로 허용한다 (오프라인에서도 카드가 보이게).
@@ -30,7 +30,7 @@ const ASSETS = [
   ...CARD_ICONS,
 ];
 
-// 허브 폴더 자신의 경로 (예: '/moattung/')
+// 허브 폴더 자신의 경로 (예: '/moyeottung/')
 const BASE_PATH = new URL('./', self.location).pathname;
 const CARD_ICON_PATHS = CARD_ICONS.map((u) => new URL(u, self.location).pathname);
 

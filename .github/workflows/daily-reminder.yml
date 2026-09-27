@@ -1,7 +1,7 @@
 # 다했텅 저녁 알림 — 매일 밤 폰으로 "체크할 시간" 푸시 신호를 보낸다.
 # 알림 내용(안 한 항목 목록)은 폰 안의 앱 데이터로 만들어지고, 여기선 신호만 보냄(체크 데이터는 GitHub에 안 올라감).
 #
-# 필요한 Secret 2개 (moattung 저장소 Settings → Secrets and variables → Actions):
+# 필요한 Secret 2개 (moyeottung 저장소 Settings → Secrets and variables → Actions):
 #   VAPID_PRIVATE_KEY  : 다했텅 전용 비밀 키 (다썼텅 키와 다름!)
 #   PUSH_SUBSCRIPTION  : 다했텅 앱 설정 탭 "🔔 저녁 알림"에서 복사한 코드
 #
@@ -33,7 +33,7 @@ jobs:
             if (!process.env.VAPID_PRIVATE_KEY || !process.env.PUSH_SUBSCRIPTION) {
               console.error("Secret(VAPID_PRIVATE_KEY / PUSH_SUBSCRIPTION)이 등록되지 않았어요"); process.exit(1);
             }
-            webpush.setVapidDetails("https://goodthing90012.github.io/moattung/dahaettung/", process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
+            webpush.setVapidDetails("https://goodthing90012.github.io/moyeottung/dahaettung/", process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
             const sub = JSON.parse(process.env.PUSH_SUBSCRIPTION);
             webpush.sendNotification(sub, JSON.stringify({ type: "daily-reminder" }), { TTL: 3 * 60 * 60, urgency: "high" })
               .then(r => console.log("보냄:", r.statusCode))

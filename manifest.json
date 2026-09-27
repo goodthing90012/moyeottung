@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "모았텅 - 텅 유니버스",
-  "short_name": "모았텅",
+  "name": "모였텅 - 텅 유니버스",
+  "short_name": "모였텅",
   "description": "다썼텅·다했텅·다뺐텅을 한곳에서 여는 텅 유니버스 허브",
   "start_url": "./index.html",
   "scope": "./",

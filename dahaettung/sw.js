@@ -47,7 +47,7 @@ self.addEventListener('activate', (e) => {
 const SHARE_DB_NAME = 'dahaettung-share-tmp';
 
 // 공유 대상 경로는 이 워커의 등록 scope 기준으로 계산한다.
-// (예: scope가 /moattung/dahaettung/ 이면 /moattung/dahaettung/share-target)
+// (예: scope가 /moyeottung/dahaettung/ 이면 /moyeottung/dahaettung/share-target)
 // manifest의 "share_target": { "action": "./share-target" } 도 manifest 위치 기준
 // 상대경로라 같은 주소로 해석된다 — 둘이 어긋나면 공유가 앱까지 도달하지 못한다.
 const SHARE_TARGET_PATH = new URL('share-target', self.registration.scope).pathname;
