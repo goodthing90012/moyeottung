@@ -1,5 +1,5 @@
 /* 다뺐텅 service worker */
-const CACHE = "dameoktung-v146";
+const CACHE = "dameoktung-v147";
 const CACHE_PREFIX = "dameoktung-"; // 이 앱이 만든 캐시만 골라내는 접두어 (옛 이름 그대로)
 const ASSETS = [
   "./",

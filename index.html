@@ -166,6 +166,13 @@
             flex-shrink: 0; font-size: 10.5px; font-weight: 800;
             color: #fff; background: var(--accent); padding: 2px 7px; border-radius: 99px;
         }
+        .st-item.has-icon::before { display: none; }
+        .st-item .st-i { width: 18px; text-align: center; flex-shrink: 0; font-size: 13px; }
+        .st-qty { flex-shrink: 0; font-size: 10.5px; font-weight: 800; color: var(--accent-dark); background: var(--accent-tint); padding: 2px 6px; border-radius: 6px; }
+        .st-val { flex-shrink: 0; font-size: 12.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
+        .st-val.food { color: #E5484D; }
+        .st-val.ex { color: var(--accent-dark); }
+        .st-val small { font-weight: 700; opacity: 0.75; margin-left: 2px; }
         .st-more { font-size: 12px; font-weight: 700; color: var(--accent-dark); opacity: 0.7; padding: 3px 4px 0; }
         .st-sub { margin-top: 4px; padding-left: 34px; font-size: 12px; color: var(--gray); }
         .st-stats { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -299,14 +306,20 @@
             h += '</div>';
             if (o.sub) h += '<div class="st-sub">' + esc(o.sub) + '</div>';
             if (o.count && o.count[1] > 0) h += '<div class="st-bar"><i style="width:' + Math.round(o.count[0] / o.count[1] * 100) + '%"></i></div>';
+            if (o.stats) h += '<div class="st-stats">' + o.stats.map(function (s) { return '<div class="st-stat"><div class="k">' + esc(s.k) + '</div><div class="v">' + s.v + '</div></div>'; }).join('') + '</div>';
             if (o.items && o.items.length) {
-                var MAX = 4;
+                var MAX = o.max || 4;
                 h += '<ul class="st-list">' + o.items.slice(0, MAX).map(function (it) {
-                    return '<li class="st-item"><span class="st-name">' + esc(cleanName(it.name)) + '</span>' + (it.note ? '<span class="st-note">' + esc(it.note) + '</span>' : '') + '</li>';
+                    return '<li class="st-item' + (it.icon ? ' has-icon' : '') + '">' +
+                        (it.icon ? '<span class="st-i">' + it.icon + '</span>' : '') +
+                        '<span class="st-name">' + esc(cleanName(it.name)) + '</span>' +
+                        (it.qty ? '<span class="st-qty">' + esc(it.qty) + '</span>' : '') +
+                        (it.note ? '<span class="st-note">' + esc(it.note) + '</span>' : '') +
+                        (it.val ? '<span class="st-val ' + (it.valCls || '') + '">' + it.val + '</span>' : '') +
+                        '</li>';
                 }).join('') + '</ul>';
                 if (o.items.length > MAX) h += '<div class="st-more">+ ' + (o.items.length - MAX) + '개 더</div>';
             }
-            if (o.stats) h += '<div class="st-stats">' + o.stats.map(function (s) { return '<div class="st-stat"><div class="k">' + esc(s.k) + '</div><div class="v">' + s.v + '</div></div>'; }).join('') + '</div>';
             el.className = 'app-status is-' + (o.state || 'todo');
             el.innerHTML = h; el.hidden = false;
         }
@@ -374,11 +387,28 @@
                 var food = (d && d.food) || [], ex = (d && d.exercise) || [];
                 if (d && d.fasted) { renderStatus(A, { state: 'done', ico: '✓', title: '오늘 단식 기록함' }); return; }
                 if (!food.length && !ex.length) { renderStatus(A, { ico: '✏️', title: '오늘 아직 기록 안 했어요', sub: '먹은 것·운동을 기록해 텅장을 채워요' }); return; }
+                var fmtK = function (n) { return Math.round(n).toLocaleString('ko-KR'); };
                 var sum = function (a) { return a.reduce(function (t, e) { return t + (Number(e.kcal) || 0); }, 0); };
+                // 먹은 것: 태그가 있으면 태그별로, 없으면 이름별로 묶기 / 운동: 이름별로 묶기
+                function group(list, byTag) {
+                    var map = {}, order = [];
+                    list.forEach(function (e) {
+                        var tag = byTag && e.tag ? String(e.tag).trim() : '';
+                        var key = tag ? 't:' + tag : 'n:' + (e.name || '');
+                        if (!map[key]) { map[key] = { name: tag || e.name || (byTag ? '먹은 것' : '운동'), isTag: !!tag, kcal: 0, qty: 0, n: 0 }; order.push(key); }
+                        var g = map[key]; g.kcal += Number(e.kcal) || 0; g.qty += (e.qty > 1 ? e.qty : 1); g.n++;
+                    });
+                    return order.map(function (k) { return map[k]; }).sort(function (a, b) { return b.kcal - a.kcal; });
+                }
+                var items = group(food, true).map(function (g) {
+                    return { icon: g.isTag ? '🏷️' : '🍚', name: g.name, qty: g.isTag ? (g.n > 1 ? g.n + '건' : '') : (g.qty > 1 ? '×' + g.qty : ''), val: fmtK(g.kcal) + '<small>kcal 먹음</small>', valCls: 'food' };
+                }).concat(group(ex, false).map(function (g) {
+                    return { icon: '🏃', name: g.name, qty: g.qty > 1 ? '×' + g.qty : '', val: fmtK(g.kcal) + '<small>kcal 운동</small>', valCls: 'ex' };
+                }));
                 renderStatus(A, { state: 'done', ico: '✓', title: '오늘 기록함', stats: [
-                    { k: '🍚 먹음', v: sum(food).toLocaleString('ko-KR') + '<small>kcal</small>' },
-                    { k: '🏃 운동', v: sum(ex).toLocaleString('ko-KR') + '<small>kcal</small>' }
-                ] });
+                    { k: '🍚 먹음', v: fmtK(sum(food)) + '<small>kcal</small>' },
+                    { k: '🏃 운동', v: fmtK(sum(ex)) + '<small>kcal</small>' }
+                ], items: items, max: 10 }); // 다뺐텅은 운동까지 다 보이게 넉넉히
             } catch (e) {}
         }
 

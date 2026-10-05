@@ -440,7 +440,7 @@ input,select{-webkit-user-select:text;user-select:text;}
 .pill-label{font-weight:700;font-size:14px;}
 .pill-val{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums;}
 .pill-sub{font-size:11px;opacity:.85;font-weight:400;}
-.pill-main{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.pill-main{display:flex;flex-direction:row;align-items:center;gap:6px;min-width:0;} /* ×N 배지를 이름 옆에 붙여서 칸 높이 유지 */
 .pill-main .pill-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .stack-date{align-self:flex-start;font-size:11px;font-weight:700;color:var(--ink-soft);
   background:#e2e9f1;border-radius:999px;padding:3px 10px;margin:8px 0 2px;}
@@ -684,7 +684,7 @@ body.modal-open{overflow:hidden;}
 .entry-qty-badge{font-size:10px;font-weight:800;color:var(--sky-deep);background:var(--sky-soft);padding:3px 7px;border-radius:6px;flex-shrink:0;}
 .fav-chip.has-split{overflow:hidden;}
 .fc-qty-btn{font-size:11px;font-weight:800;color:var(--sky-deep);padding:8px 12px 8px 9px;}
-.pill-main .entry-qty-badge{align-self:flex-start;}
+.pill-main .entry-qty-badge{align-self:center;}
 .entry-del{border:none;background:none;color:var(--ink-soft);font-size:13px;cursor:pointer;padding:4px 6px;}
 
 .slice-row{display:flex;align-items:center;gap:6px;margin:-2px 0 8px;padding:2px 0;font-size:13px;color:var(--ink-soft);font-weight:600;flex-wrap:wrap;}
