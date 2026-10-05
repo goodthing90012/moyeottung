@@ -131,19 +131,52 @@
             opacity: 0.45; font-weight: 700;
         }
 
-        /* ── 오늘 현황 줄 ── */
+        /* ── 오늘 현황 패널 ── */
+        .app-card { flex-direction: column; align-items: stretch; gap: 0; }
+        .app-top { display: flex; align-items: center; gap: 14px; }
         .app-status {
-            margin-top: 8px; padding: 7px 10px;
-            border-radius: 10px; background: #F6F4F2;
-            font-size: 12.5px; line-height: 1.45; color: var(--text);
-            word-break: keep-all;
+            margin-top: 14px; padding: 12px 13px 11px;
+            border-radius: 15px;
+            background: var(--accent-tint);
         }
-        .app-status b { font-weight: 800; }
-        .app-status .names { color: var(--gray); }
-        .app-status.todo { background: var(--accent-tint); }
-        .app-status.todo b { color: var(--accent-dark); }
-        .app-status.done { color: var(--gray); }
-        .app-status.muted { color: #A8A29E; background: #F8F7F5; }
+        .st-head { display: flex; align-items: center; gap: 8px; }
+        .st-ico {
+            width: 26px; height: 26px; flex-shrink: 0;
+            display: grid; place-items: center;
+            border-radius: 9px; background: #fff; font-size: 14px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+        .st-title { flex: 1; min-width: 0; font-size: 14px; font-weight: 800; color: var(--accent-dark); letter-spacing: -0.3px; }
+        .st-count { font-size: 12px; font-weight: 800; color: var(--accent-dark); opacity: 0.75; font-variant-numeric: tabular-nums; }
+        .st-bar { margin-top: 9px; height: 6px; border-radius: 99px; background: rgba(255, 255, 255, 0.85); overflow: hidden; }
+        .st-bar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent) 0%, var(--accent-dark) 100%); transition: width 0.4s ease; }
+        .st-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+        .st-item {
+            display: flex; align-items: center; gap: 9px;
+            padding: 8px 11px; border-radius: 11px;
+            background: #fff; font-size: 13px; color: var(--text);
+        }
+        .st-item::before {
+            content: ""; width: 13px; height: 13px; flex-shrink: 0;
+            border: 2px solid var(--accent); border-radius: 50%;
+            box-sizing: border-box; opacity: 0.85;
+        }
+        .st-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .st-note {
+            flex-shrink: 0; font-size: 10.5px; font-weight: 800;
+            color: #fff; background: var(--accent); padding: 2px 7px; border-radius: 99px;
+        }
+        .st-more { font-size: 12px; font-weight: 700; color: var(--accent-dark); opacity: 0.7; padding: 3px 4px 0; }
+        .st-sub { margin-top: 4px; padding-left: 34px; font-size: 12px; color: var(--gray); }
+        .st-stats { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .st-stat { background: #fff; border-radius: 11px; padding: 8px 11px; }
+        .st-stat .k { font-size: 11px; color: var(--gray); font-weight: 700; }
+        .st-stat .v { margin-top: 1px; font-size: 16px; font-weight: 800; color: var(--accent-dark); font-variant-numeric: tabular-nums; }
+        .st-stat .v small { font-size: 11px; font-weight: 700; opacity: 0.7; margin-left: 1px; }
+        .app-status.is-done .st-ico { background: var(--accent); color: #fff; }
+        .app-status.is-muted { background: #F6F4F2; }
+        .app-status.is-muted .st-title { color: #A8A29E; font-weight: 700; font-size: 12.5px; }
+        .app-status.is-muted .st-ico { background: transparent; box-shadow: none; }
 
         .card-dasseottung { --accent: var(--dasseottung); --accent-dark: var(--dasseottung-dark); --accent-tint: var(--dasseottung-tint); }
         .card-dahaettung  { --accent: var(--dahaettung);  --accent-dark: var(--dahaettung-dark);  --accent-tint: var(--dahaettung-tint); }
@@ -188,33 +221,39 @@
         <h2 class="section-title">앱 고르기</h2>
         <nav class="apps">
             <a class="app-card card-dasseottung" href="./dasseottung/">
-                <img class="app-char" src="./dasseottung/icon-192.png" alt="다썼텅 캐릭터" width="62" height="62" loading="lazy">
-                <div class="app-body">
-                    <div class="app-name">다썼텅 <span class="app-tag">화장품 재고</span></div>
-                    <div class="app-desc">화장품 재고를 관리하고 리필 타이밍을 똑똑하게 파악해요</div>
-                    <div class="app-status" id="st-dasseottung" hidden></div>
+                <div class="app-top">
+                    <img class="app-char" src="./dasseottung/icon-192.png" alt="다썼텅 캐릭터" width="62" height="62" loading="lazy">
+                    <div class="app-body">
+                        <div class="app-name">다썼텅 <span class="app-tag">화장품 재고</span></div>
+                        <div class="app-desc">화장품 재고를 관리하고 리필 타이밍을 똑똑하게 파악해요</div>
+                    </div>
+                    <div class="app-go">›</div>
                 </div>
-                <div class="app-go">›</div>
+                <div class="app-status" id="st-dasseottung" hidden></div>
             </a>
 
             <a class="app-card card-dahaettung" href="./dahaettung/">
-                <img class="app-char" src="./dahaettung/icon-192.png" alt="다했텅 캐릭터" width="62" height="62" loading="lazy">
-                <div class="app-body">
-                    <div class="app-name">다했텅 <span class="app-tag">루틴 · 일정</span></div>
-                    <div class="app-desc">매일의 루틴과 프로젝트·일정을 기록하고, 저녁마다 안 한 것을 알려줘요</div>
-                    <div class="app-status" id="st-dahaettung" hidden></div>
+                <div class="app-top">
+                    <img class="app-char" src="./dahaettung/icon-192.png" alt="다했텅 캐릭터" width="62" height="62" loading="lazy">
+                    <div class="app-body">
+                        <div class="app-name">다했텅 <span class="app-tag">루틴 · 일정</span></div>
+                        <div class="app-desc">매일의 루틴과 프로젝트·일정을 기록하고, 저녁마다 안 한 것을 알려줘요</div>
+                    </div>
+                    <div class="app-go">›</div>
                 </div>
-                <div class="app-go">›</div>
+                <div class="app-status" id="st-dahaettung" hidden></div>
             </a>
 
             <a class="app-card card-dappaettung" href="./dappaettung/">
-                <img class="app-char" src="./dappaettung/icon-192.png" alt="다뺐텅 캐릭터" width="62" height="62" loading="lazy">
-                <div class="app-body">
-                    <div class="app-name">다뺐텅 <span class="app-tag">칼로리 텅장</span></div>
-                    <div class="app-desc">칼로리를 통장처럼 넣고 빼면서 기록해요</div>
-                    <div class="app-status" id="st-dappaettung" hidden></div>
+                <div class="app-top">
+                    <img class="app-char" src="./dappaettung/icon-192.png" alt="다뺐텅 캐릭터" width="62" height="62" loading="lazy">
+                    <div class="app-body">
+                        <div class="app-name">다뺐텅 <span class="app-tag">칼로리 텅장</span></div>
+                        <div class="app-desc">칼로리를 통장처럼 넣고 빼면서 기록해요</div>
+                    </div>
+                    <div class="app-go">›</div>
                 </div>
-                <div class="app-go">›</div>
+                <div class="app-status" id="st-dappaettung" hidden></div>
             </a>
         </nav>
 
@@ -247,39 +286,57 @@
             return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         }
         function esc(t) { var e = document.createElement('span'); e.textContent = t == null ? '' : String(t); return e.innerHTML; }
-        function namesText(list) {
-            var MAX = 3, shown = list.slice(0, MAX).map(esc).join(', ');
-            return list.length > MAX ? shown + ' 외 ' + (list.length - MAX) + '개' : shown;
+        // 루틴 이름 앞에 붙은 이모지(✅ 등)는 떼고 보여준다 — 체크 표시처럼 보여서 헷갈림
+        function cleanName(t) {
+            try { return String(t).replace(/^(?:\p{Extended_Pictographic}|️|‍)+\s*/u, '') || String(t); }
+            catch (e) { return String(t); }
         }
-        function setStatus(app, kind, html) {
+        // opt: { state:'todo'|'done'|'muted', ico, title, count:[done,total], items:[{name,note}], sub, stats:[{k,v}] }
+        function renderStatus(app, o) {
             var el = document.getElementById('st-' + app); if (!el) return;
-            el.className = 'app-status' + (kind ? ' ' + kind : '');
-            el.innerHTML = html; el.hidden = false;
+            var h = '<div class="st-head"><span class="st-ico">' + (o.ico || '') + '</span><span class="st-title">' + esc(o.title) + '</span>';
+            if (o.count) h += '<span class="st-count">' + o.count[0] + '/' + o.count[1] + '</span>';
+            h += '</div>';
+            if (o.sub) h += '<div class="st-sub">' + esc(o.sub) + '</div>';
+            if (o.count && o.count[1] > 0) h += '<div class="st-bar"><i style="width:' + Math.round(o.count[0] / o.count[1] * 100) + '%"></i></div>';
+            if (o.items && o.items.length) {
+                var MAX = 4;
+                h += '<ul class="st-list">' + o.items.slice(0, MAX).map(function (it) {
+                    return '<li class="st-item"><span class="st-name">' + esc(cleanName(it.name)) + '</span>' + (it.note ? '<span class="st-note">' + esc(it.note) + '</span>' : '') + '</li>';
+                }).join('') + '</ul>';
+                if (o.items.length > MAX) h += '<div class="st-more">+ ' + (o.items.length - MAX) + '개 더</div>';
+            }
+            if (o.stats) h += '<div class="st-stats">' + o.stats.map(function (s) { return '<div class="st-stat"><div class="k">' + esc(s.k) + '</div><div class="v">' + s.v + '</div></div>'; }).join('') + '</div>';
+            el.className = 'app-status is-' + (o.state || 'todo');
+            el.innerHTML = h; el.hidden = false;
         }
+        function muted(app, text) { renderStatus(app, { state: 'muted', ico: '💤', title: text }); }
         var OPEN_HINT = '앱을 한 번 열면 오늘 현황이 여기 표시돼요';
 
         // 다썼텅 — Cache Storage('dasseottung-push-data')의 루틴 스냅샷
         function loadDasseottung() {
+            var A = 'dasseottung';
             if (!window.caches) return Promise.resolve();
             return caches.has('dasseottung-push-data').then(function (has) {
-                if (!has) { setStatus('dasseottung', 'muted', OPEN_HINT); return; }
+                if (!has) { muted(A, OPEN_HINT); return; }
                 return caches.open('dasseottung-push-data').then(function (c) {
                     return c.match(new URL('./dasseottung/__routine-push-snapshot', location.href).href);
                 }).then(function (res) { return res ? res.json() : null; }).then(function (snap) {
-                    if (!snap) { setStatus('dasseottung', 'muted', OPEN_HINT); return; }
-                    var list = snap.days && snap.days[todayStr()];
-                    if (!list) { setStatus('dasseottung', 'muted', OPEN_HINT); return; }
-                    if (!snap.hasRoutines) { setStatus('dasseottung', 'muted', '등록된 루틴이 없어요'); return; }
-                    if (!list.length) { setStatus('dasseottung', 'done', '😌 오늘 할 루틴 없음'); return; }
-                    var left = list.filter(function (r) { return !r.done; }).map(function (r) { return r.note ? r.name + '(' + r.note + ')' : r.name; });
-                    if (!left.length) setStatus('dasseottung', 'done', '✅ 오늘 루틴 끝! (' + list.length + '개)');
-                    else setStatus('dasseottung', 'todo', '🧴 <b>남은 루틴 ' + left.length + '개</b> <span class="names">· ' + namesText(left) + '</span>');
+                    var list = snap && snap.days && snap.days[todayStr()];
+                    if (!list) { muted(A, OPEN_HINT); return; }
+                    if (!snap.hasRoutines) { muted(A, '등록된 루틴이 없어요'); return; }
+                    if (!list.length) { renderStatus(A, { state: 'done', ico: '😌', title: '오늘 할 루틴 없음' }); return; }
+                    var left = list.filter(function (r) { return !r.done; });
+                    var done = list.length - left.length;
+                    if (!left.length) renderStatus(A, { state: 'done', ico: '✓', title: '오늘 루틴 끝!', count: [done, list.length] });
+                    else renderStatus(A, { ico: '🧴', title: '남은 루틴 ' + left.length + '개', count: [done, list.length], items: left });
                 });
             }).catch(function () {});
         }
 
         // 다했텅 — IndexedDB('dahaettung-reminder')의 미체크 스냅샷
         function loadDahaettung() {
+            var A = 'dahaettung';
             if (!window.indexedDB) return Promise.resolve();
             return new Promise(function (resolve) {
                 var req = indexedDB.open('dahaettung-reminder', 1);
@@ -292,10 +349,13 @@
                         g.onsuccess = function () {
                             db.close();
                             var snap = g.result, day = snap && snap.days && snap.days[todayStr()];
-                            if (!day) setStatus('dahaettung', 'muted', OPEN_HINT);
-                            else if (!day.total) setStatus('dahaettung', 'done', '😌 오늘 할 일 없음');
-                            else if (!day.pending.length) setStatus('dahaettung', 'done', '🎉 오늘 올클리어! (' + day.total + '개)');
-                            else setStatus('dahaettung', 'todo', '📋 <b>아직 안 한 것 ' + day.pending.length + '개</b> <span class="names">· ' + namesText(day.pending) + '</span>');
+                            if (!day) muted(A, OPEN_HINT);
+                            else if (!day.total) renderStatus(A, { state: 'done', ico: '😌', title: '오늘 할 일 없음' });
+                            else {
+                                var done = Math.max(0, day.total - day.pending.length);
+                                if (!day.pending.length) renderStatus(A, { state: 'done', ico: '✓', title: '오늘 올클리어!', count: [done, day.total] });
+                                else renderStatus(A, { ico: '📋', title: '아직 안 한 것 ' + day.pending.length + '개', count: [done, day.total], items: day.pending.map(function (n) { return { name: n }; }) });
+                            }
                             resolve();
                         };
                         g.onerror = function () { db.close(); resolve(); };
@@ -306,18 +366,19 @@
 
         // 다뺐텅 — localStorage('dameoktung.v1')의 오늘 기록
         function loadDappaettung() {
+            var A = 'dappaettung';
             try {
                 var raw = localStorage.getItem('dameoktung.v1');
-                if (!raw) { setStatus('dappaettung', 'muted', OPEN_HINT); return; }
+                if (!raw) { muted(A, OPEN_HINT); return; }
                 var st = JSON.parse(raw), d = st.days && st.days[todayStr()];
                 var food = (d && d.food) || [], ex = (d && d.exercise) || [];
-                if (d && d.fasted) { setStatus('dappaettung', 'done', '✅ 오늘 단식 기록함'); return; }
-                if (!food.length && !ex.length) { setStatus('dappaettung', 'todo', '✏️ <b>오늘 아직 기록 안 했어요</b>'); return; }
+                if (d && d.fasted) { renderStatus(A, { state: 'done', ico: '✓', title: '오늘 단식 기록함' }); return; }
+                if (!food.length && !ex.length) { renderStatus(A, { ico: '✏️', title: '오늘 아직 기록 안 했어요', sub: '먹은 것·운동을 기록해 텅장을 채워요' }); return; }
                 var sum = function (a) { return a.reduce(function (t, e) { return t + (Number(e.kcal) || 0); }, 0); };
-                var parts = [];
-                if (food.length) parts.push('먹음 ' + sum(food).toLocaleString('ko-KR') + 'kcal');
-                if (ex.length) parts.push('운동 ' + sum(ex).toLocaleString('ko-KR') + 'kcal');
-                setStatus('dappaettung', 'done', '✅ 오늘 기록함 · ' + parts.join(' · '));
+                renderStatus(A, { state: 'done', ico: '✓', title: '오늘 기록함', stats: [
+                    { k: '🍚 먹음', v: sum(food).toLocaleString('ko-KR') + '<small>kcal</small>' },
+                    { k: '🏃 운동', v: sum(ex).toLocaleString('ko-KR') + '<small>kcal</small>' }
+                ] });
             } catch (e) {}
         }
 
