@@ -911,9 +911,6 @@ input:focus,select:focus{outline:2px solid var(--sky);outline-offset:-1px;}
           <input id="ex-kcal" class="in-kcal" type="number" inputmode="numeric" placeholder="kcal" oninput="previewExQty()" onkeydown="if(event.key==='Enter')commitEntry('exercise')" />
           <button id="add-ex" class="btn ex" onclick="commitEntry('exercise')">운동</button>
         </div>
-        <div class="opt-row">
-          <button id="ex-qty-toggle" class="split-toggle" onclick="toggleExQty()">× 개수</button>
-        </div>
         <div id="ex-qty-row" class="split-row" hidden>
           <span class="split-lbl">개수</span>
           <input id="ex-qty" class="in-split-sm" type="number" inputmode="numeric" placeholder="2" oninput="previewExQty()" onkeydown="if(event.key==='Enter')commitEntry('exercise')" />
@@ -2129,7 +2126,10 @@ function renderHome(){
   var NICK=["","텅장 재벌","알뜰 부자","평범 텅민","위태 텅민","텅장 파산"];
   $("#credit-grade").textContent=NICK[cr.grade]; $("#credit-grade").className="credit-grade g"+cr.grade;
   $("#credit-badge").textContent=cr.grade+"등급"; $("#credit-badge").className="credit-badge g"+cr.grade;
-  $("#credit-sub").textContent=cr.inLoan?(cr.donateBonus>0?"기부로 "+cr.donateBonus+"단계 완화됨":"상환하면 회복"):(cr.loans>0?"잘 갚는 중 👍":"아주 좋아요");
+  // 대출 중일 때만 안내 문구 표시 (다 갚았거나 대출 이력이 없으면 숨김)
+  var _crSub=$("#credit-sub");
+  _crSub.textContent=cr.inLoan?(cr.donateBonus>0?"기부로 "+cr.donateBonus+"단계 완화됨":"상환하면 회복"):"";
+  _crSub.hidden=!cr.inLoan;
   var donTier=donationTier(state.donatedTotal||0), homeDon=$("#home-don-card");
   if(homeDon){
     homeDon.hidden=false;
