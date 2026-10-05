@@ -9,7 +9,7 @@
 //    "내 것 아닌 캐시 전부 삭제"를 하면 세 앱의 오프라인 캐시를 날려버린다.
 //    여기서는 'moyeottung-hub-' 로 시작하는 옛 캐시만 지운다.
 
-const CACHE = 'moyeottung-hub-v4';
+const CACHE = 'moyeottung-hub-v5';
 const CACHE_PREFIX = 'moyeottung-hub-';             // 이 허브가 만든 캐시만 골라내는 접두어
 
 // 허브 화면이 카드에 띄우는 각 앱 캐릭터 이미지.
@@ -71,9 +71,40 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
+// ── 공유 시트에서 "모였텅"으로 사진을 보냈을 때 (manifest share_target → ./dahaettung/share-target)
+// 다했텅 서비스워커가 등록돼 있으면 그쪽이 더 좁은 scope라 먼저 받아 처리한다.
+// 허브 워커가 받는 건 다했텅을 아직 한 번도 안 연 경우뿐 — 그때도 똑같이 저장하고 다했텅으로 넘긴다.
+// (저장 형식은 dahaettung/sw.js 의 storePendingShareFiles 와 반드시 같아야 함)
+const SHARE_TARGET_PATH = new URL('./dahaettung/share-target', self.location).pathname;
+function storePendingShareFiles(files) {
+  return new Promise((resolve, reject) => {
+    const open = indexedDB.open('dahaettung-share-tmp', 1);
+    open.onupgradeneeded = () => { open.result.createObjectStore('pending', { autoIncrement: true }); };
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const db = open.result;
+      const tx = db.transaction('pending', 'readwrite');
+      files.forEach((f) => tx.objectStore('pending').add({ blob: f, name: f.name || '', type: f.type || '', sharedAt: Date.now() }));
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); reject(tx.error); };
+    };
+  });
+}
+
 // ── fetch: 허브 폴더의 GET 요청만 처리한다.
 self.addEventListener('fetch', (event) => {
   const req = event.request;
+  if (req.method === 'POST' && new URL(req.url).pathname === SHARE_TARGET_PATH) {
+    event.respondWith((async () => {
+      try {
+        const form = await req.formData();
+        const files = form.getAll('photos').filter((f) => f && typeof f === 'object' && f.size > 0);
+        if (files.length) await storePendingShareFiles(files);
+      } catch (e) { /* 실패해도 다했텅은 열리게 */ }
+      return Response.redirect(new URL('./dahaettung/?shared=1', self.location).href, 303);
+    })());
+    return;
+  }
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
