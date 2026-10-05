@@ -547,6 +547,12 @@ input,select{-webkit-user-select:text;user-select:text;}
   padding:10px;border-radius:10px;cursor:pointer;}
 .fav-search-in{display:block;width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-family:inherit;font-size:13px;background:#f7fafd;margin-bottom:10px;}
 .fav-none{font-size:13px;color:var(--ink-soft);padding:4px 2px;}
+.fav-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:12px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;font-family:inherit;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;}
+.fav-toggle b{font-weight:800;color:var(--sky-deep);margin-left:2px;}
+.fav-toggle-arrow{color:var(--ink-soft);font-size:12px;transition:transform .2s;}
+.fav-toggle.open{border-color:var(--sky);background:var(--sky-soft);}
+.fav-toggle.open .fav-toggle-arrow{transform:rotate(180deg);}
+.fav-section{margin-bottom:4px;}
 .fav-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
 .fav-add-btn{display:block;width:100%;border:1px dashed var(--sky);background:var(--sky-soft);color:var(--sky-deep);
   font-family:inherit;font-weight:700;font-size:13px;padding:10px;border-radius:12px;cursor:pointer;margin-bottom:12px;}
@@ -867,9 +873,12 @@ input:focus,select:focus{outline:2px solid var(--sky);outline-offset:-1px;}
         <button id="spend-tag-toggle" class="spend-tag-toggle" aria-label="한방에 텅 태그 달기" onclick="toggleSpendTag()">🏷️</button>
       </div>
       <input id="spend-tag" class="in-tag" type="text" list="tag-options" placeholder="🏷️ 한방에 텅 태그 (선택, 예: 회식)" hidden />
-      <input id="fav-chip-search" class="fav-search-in" type="text" placeholder="즐겨찾기 검색" oninput="renderFavChips()" hidden />
-      <div id="fav-chips" class="fav-chips" hidden></div>
-      <button id="fav-add-btn" class="fav-add-btn" onclick="goToFavAdd()">＋ 즐겨찾기 등록</button>
+      <button id="fav-toggle" class="fav-toggle" onclick="toggleFavSection()" aria-expanded="false"><span>⭐ 즐겨찾기 <b id="fav-count"></b></span><span class="fav-toggle-arrow">▾</span></button>
+      <div id="fav-section" class="fav-section" hidden>
+        <input id="fav-chip-search" class="fav-search-in" type="text" placeholder="즐겨찾기 검색" oninput="renderFavChips()" hidden />
+        <div id="fav-chips" class="fav-chips" hidden></div>
+        <button id="fav-add-btn" class="fav-add-btn" onclick="goToFavAdd()">＋ 즐겨찾기 등록</button>
+      </div>
       <div class="adders">
         <div class="adder">
           <div class="ac-wrap">
@@ -3479,7 +3488,21 @@ var _favChipOrder=null;
 function computeFavChipOrder(){
   _favChipOrder = state.favs.slice().sort(function(a,b){ return (b.useCount||0)-(a.useCount||0); }).map(function(f){ return f.id; });
 }
+// 즐겨찾기는 기본 접힘 — 펼침 상태만 이 기기에 기억 (자동완성이 생겨서 보조 기능으로)
+var FAV_OPEN_KEY="dameoktung.favOpen";
+function favSectionOpen(){ try{ return localStorage.getItem(FAV_OPEN_KEY)==="1"; }catch(_){ return false; } }
+function applyFavSection(){
+  var open=favSectionOpen(), sec=$("#fav-section"), t=$("#fav-toggle");
+  if(sec) sec.hidden=!open;
+  if(t){ t.classList.toggle("open",open); t.setAttribute("aria-expanded",open?"true":"false"); }
+}
+function toggleFavSection(){
+  try{ localStorage.setItem(FAV_OPEN_KEY,favSectionOpen()?"0":"1"); }catch(_){}
+  applyFavSection();
+}
 function renderFavChips(){
+  var cnt=$("#fav-count"); if(cnt) cnt.textContent=state.favs.length?"("+state.favs.length+")":"";
+  applyFavSection();
   var wrap=$("#fav-chips"); if(!wrap) return;
   var srch=$("#fav-chip-search");
   if(!state.favs.length){ wrap.hidden=true; wrap.innerHTML=""; if(srch)srch.hidden=true; _favChipOrder=null; return; }
