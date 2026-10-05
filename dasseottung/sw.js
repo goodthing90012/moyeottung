@@ -2,7 +2,7 @@
 // 업데이트 정책: '앱 새로고침' 버튼을 누를 때만 캐시를 비우고 다시 받는다.
 // (자동 강제 업데이트는 오프라인 캐시 리스크 때문에 도입하지 않음 → skipWaiting 미사용)
 
-const CACHE = 'dasseottung-v63';
+const CACHE = 'dasseottung-v64';
 const CACHE_PREFIX = 'dasseottung-';               // 이 앱이 만든 캐시만 골라내는 접두어
 const PUSH_DATA_CACHE = 'dasseottung-push-data';   // 알림용 루틴 스냅샷 (버전 정리 대상 아님)
 const PUSH_SNAPSHOT_URL = './__routine-push-snapshot';

@@ -8598,7 +8598,7 @@
     }
     let pushSnapshotTimer = null;
     function schedulePushSnapshot() {
-        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        // 알림을 안 켜도 저장: 모였텅 첫 화면의 '오늘 현황'이 이 스냅샷을 읽는다
         clearTimeout(pushSnapshotTimer);
         pushSnapshotTimer = setTimeout(writeRoutinePushSnapshot, 300);
     }
