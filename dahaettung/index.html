@@ -952,6 +952,19 @@
             req.onerror = () => reject(req.error);
         });
     }
+    // 모였텅 첫 화면이 순환 루틴을 맨 위에 보여줄 수 있게, 미체크 순환 루틴 이름만 따로 모은다
+    function reminderCyclePending(dateStr) {
+        const names = collectDayItems(dateStr).filter(i => !i.done && i.kind === 'cycle').map(i => i.name);
+        if (dateStr !== getTodayStr()) {
+            cycleRoutines.forEach(cr => {
+                if (cycleActiveOnDay(cr, dateStr) && !cycleDoneOn(cr, dateStr)) {
+                    const c = cycleTodayItem(cr);
+                    if (c) names.push(`${cr.name}: ${c.item}`);
+                }
+            });
+        }
+        return names;
+    }
     function reminderPendingItems(dateStr) {
         const items = collectDayItems(dateStr).filter(i => !i.done).map(i => i.name);
         // collectDayItems는 순환 루틴을 오늘만 넣어서, 미래 날짜는 여기서 보충
@@ -971,7 +984,7 @@
             const days = {};
             for (let i = 0; i <= REMINDER_DAYS_AHEAD; i++) {
                 const d = addDaysStr(getTodayStr(), i);
-                days[d] = { pending: reminderPendingItems(d), total: collectDayItems(d).length };
+                days[d] = { pending: reminderPendingItems(d), cyclePending: reminderCyclePending(d), total: collectDayItems(d).length };
             }
             const db = await openReminderDB();
             await new Promise((resolve, reject) => {
@@ -2271,10 +2284,10 @@
         routines.forEach(r => { const st = routineCheckState(r, dateStr); if (st === 'off' || st === 'covered' || st === 'skipped' || st === 'pending') return; items.push({ name: r.name, done: st === 'checked' }); });
         cycleRoutines.forEach(cr => {
             const rec = cycleDoneOn(cr, dateStr);
-            if (rec) items.push({ name: `${cr.name}: ${rec}`, done: true });
+            if (rec) items.push({ name: `${cr.name}: ${rec}`, done: true, kind: 'cycle' });
             else if (dateStr === getTodayStr() && cycleActiveOnDay(cr, dateStr)) {
                 const c = cycleTodayItem(cr);
-                if (c) items.push({ name: `${cr.name}: ${c.item}`, done: false });
+                if (c) items.push({ name: `${cr.name}: ${c.item}`, done: false, kind: 'cycle' });
             }
         });
         weekdayRoutines.forEach(wr => {

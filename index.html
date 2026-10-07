@@ -367,7 +367,13 @@
                             else {
                                 var done = Math.max(0, day.total - day.pending.length);
                                 if (!day.pending.length) renderStatus(A, { state: 'done', ico: '✓', title: '오늘 올클리어!', count: [done, day.total] });
-                                else renderStatus(A, { ico: '📋', title: '아직 안 한 것 ' + day.pending.length + '개', count: [done, day.total], items: day.pending.map(function (n) { return { name: n }; }) });
+                                else {
+                                    // 순환 루틴(아침에 제일 먼저 보는 것)을 맨 위로
+                                    var cyc = day.cyclePending || [];
+                                    var ordered = day.pending.filter(function (n) { return cyc.indexOf(n) >= 0; })
+                                        .concat(day.pending.filter(function (n) { return cyc.indexOf(n) < 0; }));
+                                    renderStatus(A, { ico: '📋', title: '아직 안 한 것 ' + day.pending.length + '개', count: [done, day.total], items: ordered.map(function (n) { return cyc.indexOf(n) >= 0 ? { name: n, note: '🔄 순환' } : { name: n }; }) });
+                                }
                             }
                             resolve();
                         };
