@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dahaettung-v171';
+const CACHE_NAME = 'dahaettung-v172';
 const CACHE_PREFIX = 'dahaettung-';                // 이 앱이 만든 캐시만 골라내는 접두어
 
 const ASSETS = [

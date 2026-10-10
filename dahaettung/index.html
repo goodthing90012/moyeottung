@@ -1844,7 +1844,7 @@
             const hol = holidayOn(dateStr);
             // 공휴일 이름 줄은 모든 칸에 같은 높이로 자리를 잡아둔다 → 공휴일 칸만 캐릭터/점이 아래로 밀리던 문제 방지
             const holName = hol ? `<div class="cal-hname ${hol.off ? '' : 'obs'}">${escapeHtml(hol.name)}</div>` : '<div class="cal-hname" aria-hidden="true">&nbsp;</div>';
-            html += `<div class="cal-cell ${isToday?'cal-today':''} ${hol && hol.off ? 'cal-holiday' : ''}" data-date="${dateStr}" onclick="showDateDetail('${dateStr}')">
+            html += `<div class="cal-cell ${isToday?'cal-today':''} ${hol && hol.off ? 'cal-holiday' : ''}" data-date="${dateStr}" onclick="goToCheckDate('${dateStr}')">
                 <div class="daynum">${d}</div>${holName}${mark}${memoIcon}
             </div>`;
         }
