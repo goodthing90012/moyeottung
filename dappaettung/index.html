@@ -588,6 +588,14 @@ input,select{-webkit-user-select:text;user-select:text;}
 .tag-rank-row.sel{background:var(--sky-soft);}
 .tag-rank-row:active{opacity:.7;}
 .tag-rank-row:last-child{border-bottom:none;}
+.tag-detail{margin:2px 0 8px 21px;border-left:2px solid var(--line);padding-left:10px;}
+.tag-detail-row{display:flex;align-items:center;gap:8px;padding:8px 6px;border-radius:8px;cursor:pointer;font-size:13px;}
+.tag-detail-row:active{background:var(--sky-soft);}
+.tag-detail-date{font-size:11px;color:var(--ink-soft);width:46px;flex-shrink:0;}
+.tag-detail-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);font-weight:600;}
+.tag-detail-kcal{font-family:var(--mono);font-size:12px;color:var(--ink-soft);flex-shrink:0;}
+.tag-detail-go{font-size:12px;color:var(--ink-soft);flex-shrink:0;}
+.tag-detail-hint{font-size:11px;color:var(--ink-soft);padding:4px 6px 2px;}
 .tag-swatch{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
 .tag-rank-name{flex:1;font-size:14px;font-weight:700;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .tag-rank-count{font-size:11px;color:var(--ink-soft);}
@@ -2887,6 +2895,35 @@ function drawTagDonut(){
 function toggleTagSegSelect(tag){
   _selectedTagSeg = (_selectedTagSeg===tag) ? null : tag;
   drawTagDonut();
+  renderTagDetail();
+}
+// 분석에서 태그(미분류 포함)를 누르면 그 달의 해당 기록을 바로 아래에 펼쳐 보여줌 — 누르면 그 날짜 입력 화면으로
+function renderTagDetail(){
+  document.querySelectorAll(".tag-detail").forEach(function(x){ x.remove(); });
+  if(!_selectedTagSeg || _tagY===null) return;
+  var row=Array.prototype.find.call(document.querySelectorAll(".tag-rank-row"),function(r){ return r.getAttribute("data-tag")===_selectedTagSeg; }); if(!row) return;
+  var ym=_tagY+"-"+String(_tagM+1).padStart(2,"0"), items=[];
+  Object.keys(state.days).forEach(function(k){
+    if(k.slice(0,7)!==ym) return;
+    (state.days[k].food||[]).forEach(function(it){
+      var tag=(it.tag||"").trim()||"미분류";
+      if(_tagViewGrouped){ var g=findTagGroup(tag); if(g) tag=g.name; }
+      if(tag===_selectedTagSeg) items.push({date:k,name:it.name,kcal:it.kcal,qty:it.qty});
+    });
+  });
+  items.sort(function(a,b){ return a.date<b.date?1:a.date>b.date?-1:b.kcal-a.kcal; });
+  var box=el("div","tag-detail");
+  if(_selectedTagSeg==="미분류") box.appendChild(el("div","tag-detail-hint","태그가 빠진 기록이에요 · 누르면 그 날 기록으로 가서 태그를 달 수 있어요"));
+  items.forEach(function(it){
+    var r=el("div","tag-detail-row");
+    r.addEventListener("click",function(){ selectDate(it.date); });
+    r.appendChild(el("span","tag-detail-date",shortDate(it.date)+" ("+weekdayKr(it.date)+")"));
+    r.appendChild(el("span","tag-detail-name",(it.name||"먹은 것")+(it.qty>1?" ×"+it.qty:"")));
+    r.appendChild(el("span","tag-detail-kcal",fmt(it.kcal)));
+    r.appendChild(el("span","tag-detail-go","›"));
+    box.appendChild(r);
+  });
+  row.parentNode.insertBefore(box,row.nextSibling);
 }
 function periodStartKey(p){
   if(p==="custom") return _fltStart||null;
