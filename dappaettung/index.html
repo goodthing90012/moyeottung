@@ -591,7 +591,7 @@ input,select{-webkit-user-select:text;user-select:text;}
 .tag-detail{margin:2px 0 8px 21px;border-left:2px solid var(--line);padding-left:10px;}
 .tag-detail-row{display:flex;align-items:center;gap:8px;padding:8px 6px;border-radius:8px;cursor:pointer;font-size:13px;}
 .tag-detail-row:active{background:var(--sky-soft);}
-.tag-detail-date{font-size:11px;color:var(--ink-soft);width:46px;flex-shrink:0;}
+.tag-detail-date{font-size:11px;color:var(--ink-soft);width:62px;flex-shrink:0;white-space:nowrap;}
 .tag-detail-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);font-weight:600;}
 .tag-detail-kcal{font-family:var(--mono);font-size:12px;color:var(--ink-soft);flex-shrink:0;}
 .tag-detail-go{font-size:12px;color:var(--ink-soft);flex-shrink:0;}
@@ -2898,6 +2898,18 @@ function toggleTagSegSelect(tag){
   renderTagDetail();
 }
 // 분석에서 태그(미분류 포함)를 누르면 그 달의 해당 기록을 바로 아래에 펼쳐 보여줌 — 누르면 그 날짜 입력 화면으로
+// 그 날짜 기록 화면(입출금 탭 맨 위 입력 카드)으로 이동해서 보이게 스크롤
+function goToLedgerDate(k){
+  selectDate(k);
+  setTimeout(function(){
+    var card=document.querySelector("#tab-ledger .input-card");
+    if(card){
+      var hdr=document.querySelector("header"), off=(hdr?hdr.getBoundingClientRect().height:70)+8;
+      window.scrollTo({top:Math.max(0,card.getBoundingClientRect().top+window.scrollY-off),behavior:"smooth"});
+    }
+    toast(shortDate(k)+" ("+weekdayKr(k)+") 기록으로 왔어요 · 항목을 눌러 태그를 달아요");
+  },60);
+}
 function renderTagDetail(){
   document.querySelectorAll(".tag-detail").forEach(function(x){ x.remove(); });
   if(!_selectedTagSeg || _tagY===null) return;
@@ -2916,7 +2928,7 @@ function renderTagDetail(){
   if(_selectedTagSeg==="미분류") box.appendChild(el("div","tag-detail-hint","태그가 빠진 기록이에요 · 누르면 그 날 기록으로 가서 태그를 달 수 있어요"));
   items.forEach(function(it){
     var r=el("div","tag-detail-row");
-    r.addEventListener("click",function(){ selectDate(it.date); });
+    r.addEventListener("click",function(){ goToLedgerDate(it.date); });
     r.appendChild(el("span","tag-detail-date",shortDate(it.date)+" ("+weekdayKr(it.date)+")"));
     r.appendChild(el("span","tag-detail-name",(it.name||"먹은 것")+(it.qty>1?" ×"+it.qty:"")));
     r.appendChild(el("span","tag-detail-kcal",fmt(it.kcal)));
