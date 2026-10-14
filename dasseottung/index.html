@@ -295,6 +295,18 @@
             </div>
         </div>
     </div>
+    <div class="confirm-overlay" id="openCountBoxOverlay">
+        <div class="confirm-box">
+            <p>📦 개봉할까요?</p>
+            <div style="font-size:11px; color:var(--gray); margin-bottom:8px; margin-top:-6px;">언제부터 썼나요? 늦게 눌렀다면 실제로 쓰기 시작한 날을 골라주세요.</div>
+            <input type="date" id="openCountBoxDate"
+                style="width:100%; box-sizing:border-box; padding:10px; border-radius:10px; border:1px solid #ddd; font-size:14px; margin-bottom:14px;">
+            <div class="confirm-btn-row">
+                <button class="confirm-btn no" onclick="document.getElementById('openCountBoxOverlay').classList.remove('active')">취소</button>
+                <button class="confirm-btn yes" style="background:var(--primary, #FF5A5F);" onclick="confirmOpenCountBox()">개봉</button>
+            </div>
+        </div>
+    </div>
     <div class="confirm-overlay" id="editOriginalStockOverlay">
         <div class="confirm-box">
             <p>이번 박스 크기 수정</p>
@@ -2689,8 +2701,8 @@
                     </div>
                     <div class="right-actions">
                         <div class="tung-bottle-wrapper ${isExhausted ? 'empty' : ''}"
-                            onclick="${isExhausted ? `showToast('😢 이미 다 썼어요')` : `decrementCountStock(${p.id}, this)`}"
-                            style="${isExhausted ? 'opacity:0.45; cursor:not-allowed;' : ''}">
+                            onclick="${isExhausted ? `showToast('😢 이미 다 썼어요')` : (isCountUnopened ? `showToast('📦 먼저 개봉 버튼을 눌러 개봉해주세요!')` : `decrementCountStock(${p.id}, this)`)}"
+                            style="${(isExhausted || isCountUnopened) ? 'opacity:0.45; cursor:not-allowed;' : ''}">
                             <svg viewBox="0 0 44 58" style="width:100%; height:calc(100% - 16px); overflow:visible; display:block;">
                               <!-- 뚜껑 -->
                               <rect x="10" y="2" width="24" height="9" rx="4"
@@ -2718,7 +2730,7 @@
                                 ${isExhausted ? '텅!' : p.stock + unit}
                               </text>
                             </svg>
-                            <div class="tung-text">${isExhausted ? '😢텅' : '사용'}</div>
+                            <div class="tung-text">${isExhausted ? '😢텅' : (isCountUnopened ? '미개봉' : '사용')}</div>
                         </div>
                     </div>`;
                 listEl.appendChild(card);
@@ -5572,16 +5584,38 @@
         const last = p.pauseHistory && p.pauseHistory.length ? p.pauseHistory[p.pauseHistory.length - 1] : null;
         return !!(last && !last.resumedAt);
     }
-    // 미개봉 → 개봉: 박스 시작일을 오늘로 다시 잡는다 (큐에 대기하다 실제로는 며칠 뒤에 열었을 수 있어서)
+    // 미개봉 → 개봉: 언제부터 썼는지 묻고(기본 오늘) 그 날짜를 박스 사용 시작일로 잡는다
+    // (미개봉 상태에선 '사용' 버튼이 막혀 있어서, 개봉을 늦게 누른 경우 여기서 실제 시작일을 고르게 함)
+    let openCountBoxTargetId = null;
     function openCountBox(id) {
         const p = products.find(x => x.id === id);
         if (!p || p.itemType !== 'count') return;
         ensureBoxQueue(p);
         if (!p.boxQueue.length) return;
+        openCountBoxTargetId = id;
+        const today = formatDateString(getTodayTimeline());
+        const inp = document.getElementById('openCountBoxDate');
+        inp.value = today; inp.max = today;
+        document.getElementById('openCountBoxOverlay').classList.add('active');
+    }
+    function confirmOpenCountBox() {
+        const p = products.find(x => x.id === openCountBoxTargetId);
+        document.getElementById('openCountBoxOverlay').classList.remove('active');
+        if (!p) return;
+        ensureBoxQueue(p);
+        if (!p.boxQueue.length) return;
+        const val = document.getElementById('openCountBoxDate').value;
+        const parts = (val || '').split('-');
+        let ts = getTodayTimeline();
+        if (parts.length === 3) {
+            const t = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])).getTime();
+            if (!isNaN(t) && t <= getTodayTimeline()) ts = t;
+        }
         const front = p.boxQueue[0];
         front.opened = true;
-        front.startDate = getTodayTimeline();
-        showToast('🎉 개봉 완료! 이 박스 사용 기간 계산을 오늘부터 시작해요');
+        front.startDate = ts;
+        const isToday = ts === getTodayTimeline();
+        showToast(isToday ? '🎉 개봉 완료! 오늘부터 사용 기간을 세요' : '🎉 개봉 완료! ' + formatDateString(ts) + '부터 사용한 걸로 기록했어요');
         saveToStorage();
         renderProducts();
     }
