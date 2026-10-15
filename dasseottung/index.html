@@ -672,6 +672,15 @@
             </div>
         </div>
     </div>
+    <div class="confirm-overlay" id="undoCountUseOverlay">
+        <div class="confirm-box">
+            <p id="undoCountUseLabel">가장 최근 사용 1개를 취소할까요?</p>
+            <div class="confirm-btn-row">
+                <button class="confirm-btn no" onclick="pendingCountUndoId=null; document.getElementById('undoCountUseOverlay').classList.remove('active')">아니오</button>
+                <button class="confirm-btn yes" onclick="proceedUndoCountUse()">예, 취소</button>
+            </div>
+        </div>
+    </div>
     <div class="confirm-overlay" id="editScheduleOverlay">
         <div class="confirm-box" style="width:86%; max-width:320px;">
             <p style="margin-bottom:10px; font-weight:bold;">행사 일정 수정</p>
@@ -1301,6 +1310,10 @@
                 <button class="btn-save" style="background-color:#7C5CFF; width:100%;" onclick="decreaseTungWithCalendar()">📅 가장 최근 텅 1개 되돌리기 (-1)</button>
                 <div style="font-size:11px; color:var(--gray); line-height:1.5; margin-top:6px;">
                     누적 텅과 달력 기록이 <b>항상 같이</b> 줄어 정합성이 유지돼요. 재고·개봉 상태·루틴·카테고리는 바뀌지 않아요.
+                </div>
+                <button class="btn-save" style="background-color:#FF922B; width:100%; margin-top:12px;" onclick="undoLatestCountUseFromSettings()">📦 개수형 가장 최근 사용 1개 되돌리기</button>
+                <div style="font-size:11px; color:var(--gray); line-height:1.5; margin-top:6px;">
+                    영양제·마스크팩 같은 개수형에서 잘못 누른 '사용'을 취소해요. 재고가 1개 다시 늘고, 그 사용으로 박스가 끝났다면 박스 완료 기록도 함께 되돌려요.
                 </div>
             </div>
             <div style="font-size:11px; color:var(--gray); text-align:center; margin-top:8px;">
@@ -2656,6 +2669,9 @@
                         <div style="margin-bottom:7px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
                             <span class="badge neutral">📦 개수형</span>
                             ${isExhausted ? '<span class="badge danger">다 썼어요</span>' : stockLevelBadge}
+                            ${(() => { const h = p.countHistory || []; const last = h[h.length - 1];
+                                return (last && formatDateString(last.date) === formatDateString(getTodayTimeline()))
+                                    ? `<button class="btn-undo-tung" style="margin-left:0;" onclick="undoLastCountUse(${p.id})">↩️ 방금 사용 취소</button>` : ''; })()}
                         </div>
                         <div class="prod-status">${p.registeredAsNew === false ? '이미 쓰던 것' : ''}</div>
                         ${exhaustCount > 0 ? `<div class="tung-count-badge">🫙 ${getTungOrdinalLabel(exhaustCount)}${latestBoxReview ? '' : ' · 리뷰 없음'}</div>` : ''}
@@ -5676,9 +5692,11 @@
             setTimeout(() => el.classList.remove('pressing'), 480);
         }
         if (!p.countHistory) p.countHistory = [];
-        p.countHistory.push({ date: getTodayTimeline() });
-
         const front = p.boxQueue[0];
+        // 되돌리기용으로 이번 사용 직전의 박스 상태를 같이 남긴다 (박스 완료까지 정확히 복원하기 위해)
+        const useRec = { date: getTodayTimeline(), boxSize: front.size, boxStart: front.startDate, boxOpened: !!front.opened };
+        p.countHistory.push(useRec);
+
         if (!front.opened) {
             front.opened = true;
             front.startDate = getTodayTimeline(); // 대기하다 실제로 지금 처음 쓰기 시작한 거라 시작일을 오늘로 재설정
@@ -5691,6 +5709,8 @@
             if (!p.exhaustedHistory) p.exhaustedHistory = [];
             p.exhaustedHistory.push({ date: getTodayTimeline(), days: boxDays });
             p.boxQueue.shift(); // 다음 박스로 전환
+            useRec.completedBox = true;
+            if (p.boxQueue.length) { useRec.nextPrevStart = p.boxQueue[0].startDate; useRec.nextPrevOpened = !!p.boxQueue[0].opened; }
             if (p.boxQueue.length) p.boxQueue[0].startDate = getTodayTimeline(); // 다음 박스가 지금부터 시작
         }
         syncCountMirrors(p);
@@ -5707,6 +5727,59 @@
                 openReviewModal(id, p.name, p.exhaustedHistory.length);
             }
         }, 260);
+    }
+    // ── 개수형 사용(텅) 취소: 가장 최근 '1개 사용' 기록 1건을 되돌린다 ──
+    // 박스가 그 사용으로 완료됐었다면 박스 완료 기록·그 박스 리뷰까지 함께 되돌리고 박스를 다시 맨 앞으로 복원한다.
+    function undoLastCountUse(id, silent) {
+        const p = products.find(x => x.id === id);
+        if (!p || p.itemType !== 'count') return false;
+        ensureBoxQueue(p);
+        const hist = p.countHistory || [];
+        if (!hist.length) { showToast('⚠️ 되돌릴 사용 기록이 없어요'); return false; }
+        const rec = hist[hist.length - 1];
+        const front = p.boxQueue[0];
+        if (rec.completedBox) {
+            const boxNo = (p.exhaustedHistory || []).length;
+            if (p.exhaustedHistory && p.exhaustedHistory.length) p.exhaustedHistory.pop();
+            reviews = reviews.filter(r => !(r.productId === id && r.tungNo === boxNo));
+            if (front && rec.nextPrevStart !== undefined) { front.startDate = rec.nextPrevStart; front.opened = !!rec.nextPrevOpened; }
+            p.boxQueue.unshift({ size: rec.boxSize, remaining: 1, startDate: rec.boxStart, opened: true });
+        } else if (front && (front.size == null || front.remaining < front.size)) {
+            front.remaining += 1;
+        } else {
+            // 예전 기록(되돌리기 정보가 없던 시절)이 박스 완료였던 경우 — 박스 크기를 몰라 안전하게 복원할 수 없음
+            showToast('⚠️ 이 사용 기록은 박스 완료라 자동으로 되돌릴 수 없어요. 박스 목록에서 정리해주세요');
+            return false;
+        }
+        hist.pop();
+        syncCountMirrors(p);
+        saveToStorage();
+        renderProducts();
+        if (typeof renderReviewList === 'function') renderReviewList();
+        if (!silent) showToast(`↩️ [${p.name}] 사용 1${p.unit || '개'} 취소 · ${p.stock}${p.unit || '개'} 남음`);
+        return true;
+    }
+    // 설정 페이지: 개수형 전체에서 가장 최근 사용 1건 찾아 확인 후 되돌리기
+    let pendingCountUndoId = null;
+    function undoLatestCountUseFromSettings() {
+        let target = null;
+        products.forEach(p => {
+            if (p.itemType !== 'count') return;
+            const h = p.countHistory || [];
+            if (!h.length) return;
+            const last = h[h.length - 1];
+            if (!target || last.date >= target.date) target = { id: p.id, name: p.name, date: last.date, unit: p.unit || '개' };
+        });
+        if (!target) { showToast('⚠️ 되돌릴 개수형 사용 기록이 없어요'); return; }
+        pendingCountUndoId = target.id;
+        const labelEl = document.getElementById('undoCountUseLabel');
+        if (labelEl) labelEl.textContent = `[${target.name}]의 ${formatDateString(target.date)} 사용 기록 1건을 취소할까요? 재고가 1${target.unit} 다시 늘어나요.`;
+        document.getElementById('undoCountUseOverlay').classList.add('active');
+    }
+    function proceedUndoCountUse() {
+        document.getElementById('undoCountUseOverlay').classList.remove('active');
+        if (pendingCountUndoId != null) undoLastCountUse(pendingCountUndoId);
+        pendingCountUndoId = null;
     }
     // 맨 앞 박스 재고를 소소하게 보정하는 용도(±1). 기록은 안 남고, 박스 크기(size)를 못 넘는다.
     function adjustCountStock(id, amount) {
