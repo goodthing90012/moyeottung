@@ -5747,9 +5747,22 @@
         } else if (front && (front.size == null || front.remaining < front.size)) {
             front.remaining += 1;
         } else {
-            // 예전 기록(되돌리기 정보가 없던 시절)이 박스 완료였던 경우 — 박스 크기를 몰라 안전하게 복원할 수 없음
-            showToast('⚠️ 이 사용 기록은 박스 완료라 자동으로 되돌릴 수 없어요. 박스 목록에서 정리해주세요');
-            return false;
+            // 예전 기록(되돌리기 정보가 없던 시절)인데 그 사용으로 박스가 끝났던 경우 — 남은 기록으로 최대한 복원한다.
+            // 박스 크기: 같은 제품 박스는 보통 크기가 같아서 다음 박스(없으면 마지막 원래 크기) 크기를 쓴다.
+            // 시작일: 박스 완료 기록에 남은 사용 기간(days)으로 역산한다.
+            const ex = (p.exhaustedHistory || [])[(p.exhaustedHistory || []).length - 1];
+            const sameDay = ex && formatDateString(ex.date) === formatDateString(rec.date);
+            const guessSize = (front && front.size) || p.originalStock || null;
+            if (!sameDay || !guessSize) {
+                showToast('⚠️ 이 사용 기록은 자동으로 되돌릴 수 없어요. 박스 목록에서 정리해주세요');
+                return false;
+            }
+            const boxNo = p.exhaustedHistory.length;
+            p.exhaustedHistory.pop();
+            reviews = reviews.filter(r => !(r.productId === id && r.tungNo === boxNo));
+            const start = (typeof ex.days === 'number') ? ex.date - ex.days * 24 * 60 * 60 * 1000 : (p.createdAt || ex.date);
+            if (front && front.remaining >= (front.size || 0)) front.opened = false; // 다음 박스는 아직 안 연 상태로
+            p.boxQueue.unshift({ size: guessSize, remaining: 1, startDate: start, opened: true });
         }
         hist.pop();
         syncCountMirrors(p);
