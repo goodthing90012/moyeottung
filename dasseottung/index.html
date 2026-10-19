@@ -1309,7 +1309,7 @@
                 </div>
                 <button class="btn-save" style="background-color:#7C5CFF; width:100%;" onclick="decreaseTungWithCalendar()">📅 가장 최근 텅 1개 되돌리기 (-1)</button>
                 <div style="font-size:11px; color:var(--gray); line-height:1.5; margin-top:6px;">
-                    누적 텅과 달력 기록이 <b>항상 같이</b> 줄어 정합성이 유지돼요. 재고·개봉 상태·루틴·카테고리는 바뀌지 않아요.
+                    재고가 1개 다시 늘고, 누적 텅과 달력 기록이 <b>항상 같이</b> 줄어요. 그 통의 개봉일도 텅 이전으로 돌아가요.
                 </div>
                 <button class="btn-save" style="background-color:#FF922B; width:100%; margin-top:12px;" onclick="undoLatestCountUseFromSettings()">📦 개수형 가장 최근 사용 1개 되돌리기</button>
                 <div style="font-size:11px; color:var(--gray); line-height:1.5; margin-top:6px;">
@@ -3803,7 +3803,7 @@
         }
         const dStr = formatDateString(target.date);
         const labelEl = document.getElementById('decreaseTungCalLabel');
-        if (labelEl) labelEl.textContent = `[${target.product.name}]의 ${dStr} 텅 기록과 누적 텅을 같이 1개 줄일까요?`;
+        if (labelEl) labelEl.textContent = `[${target.product.name}]의 ${dStr} 텅을 되돌릴까요? 재고가 1개 다시 늘고, 누적 텅·달력 기록이 1개 줄어요.`;
         pendingCalDecrease = target;
         document.getElementById('decreaseTungCalOverlay').classList.add('active');
     }
@@ -3816,10 +3816,21 @@
         document.getElementById('decreaseTungCalOverlay').classList.remove('active');
         if (!pendingCalDecrease) return;
         const { product, index } = pendingCalDecrease;
+        const entry = product.tungHistory && product.tungHistory[index];
+        const isLatestOfProduct = !!entry && index === product.tungHistory.length - 1;
+        const undoneTungNo = (entry && entry.tungNo) || (product.tungCount || 0);
         // 해당 기록 제거
-        if (product.tungHistory && product.tungHistory[index]) {
-            product.tungHistory.splice(index, 1);
+        if (entry) product.tungHistory.splice(index, 1);
+        // 텅 누를 때 1개 줄었던 재고를 다시 1개 늘림
+        product.stock = (product.stock || 0) + 1;
+        // 그 제품의 마지막 텅이었다면, 텅 직전 쓰던 통의 개봉일도 복원 (텅 기록의 사용일수로 역산)
+        if (isLatestOfProduct && typeof entry.days === 'number') {
+            product.openedDate = entry.date - (entry.days + getTotalPausedDays(product, entry.date)) * 24 * 60 * 60 * 1000;
+            if (product.unopened) product.unopened = false;
         }
+        // 취소된 텅 차수에 달린 리뷰도 같이 제거
+        reviews = reviews.filter(r => !(r.productId === product.id && r.tungNo === undoneTungNo));
+        if (lastTungAction && lastTungAction.productId === product.id) lastTungAction = null;
         // 제품 텅 카운트도 같이 줄임 (음수 방지)
         product.tungCount = Math.max((product.tungCount || 0) - 1, 0);
         // 누적 텅도 -1
@@ -3827,7 +3838,8 @@
         pendingCalDecrease = null;
         saveToStorage();
         syncAllAndRender();
-        showToast(`📅 텅 기록 1건과 누적 텅을 줄였어요 (현재 ${totalTungCount}개)`);
+        if (typeof renderReviewList === 'function') renderReviewList();
+        showToast(`↩️ [${product.name}] 텅 1개 되돌림 · 재고 ${product.stock}개 (누적 텅 ${totalTungCount}개)`);
     }
 
     // 텅 차수를 "첫 텅", "두번째 텅", "N번째 텅"으로 표현
