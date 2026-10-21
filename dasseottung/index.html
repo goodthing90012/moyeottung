@@ -4931,7 +4931,7 @@
     // 루틴 탭에서 선택된 날짜 (기본: 오늘). 어제까지만 이동 가능
     let routineDateOffset = 0; // 0=오늘, -1=어제, 그 이전은 보기 전용
     const ROUTINE_VIEW_MIN_OFFSET = -90; // 보기 가능한 최대 과거 범위 (기록 보관 90일과 동일)
-    const ROUTINE_EDIT_MIN_OFFSET = -1;  // 체크/수정 가능한 범위 (오늘·어제)
+    const ROUTINE_EDIT_MIN_OFFSET = ROUTINE_VIEW_MIN_OFFSET; // 체크/수정 가능한 범위 — 제한 해제: 볼 수 있는 날(90일)은 모두 체크 가능 (예전엔 오늘·어제만)
     function isRoutineDateEditable() {
         return routineDateOffset >= ROUTINE_EDIT_MIN_OFFSET;
     }
@@ -5338,7 +5338,7 @@
 
     // 루틴 전체 완료
     function checkAllRoutine(routineId, el) {
-        if (!isRoutineDateEditable()) { showToast('체크는 오늘·어제만 할 수 있어요'); return; }
+        if (!isRoutineDateEditable()) { showToast('체크는 최근 90일까지만 할 수 있어요'); return; }
         const r = routines.find(rt => rt.id === routineId);
         if (!r) return;
         const todayStr = getSelectedRoutineStr();
@@ -5430,7 +5430,7 @@
 
     // 루틴 텅 버튼 애니메이션
     function toggleRoutineCheck(routineId, productId, el) {
-        if (!isRoutineDateEditable()) { showToast('체크는 오늘·어제만 할 수 있어요'); return; }
+        if (!isRoutineDateEditable()) { showToast('체크는 최근 90일까지만 할 수 있어요'); return; }
         const r = routines.find(rt => rt.id === routineId);
         if (!r) return;
         const todayStr = getSelectedRoutineStr();
@@ -6492,7 +6492,7 @@
         } else {
             const todayStr = selectedStr;
             const editable = isRoutineDateEditable();
-            const noticeHtml = editable ? '' : `<div style="display:flex; align-items:center; gap:6px; background:#F3F4F6; color:#888; font-size:11px; font-weight:600; padding:8px 12px; border-radius:10px; margin-bottom:12px;">🔒 지난 기록은 보기 전용이에요. 체크는 오늘·어제만 할 수 있어요.</div>`;
+            const noticeHtml = editable ? '' : `<div style="display:flex; align-items:center; gap:6px; background:#F3F4F6; color:#888; font-size:11px; font-weight:600; padding:8px 12px; border-radius:10px; margin-bottom:12px;">🔒 90일보다 오래된 기록은 보기 전용이에요.</div>`;
             // 그날 대상인 루틴만 노출 (요일 지정 루틴은 해당 요일에만)
             const dayRoutines = routines.filter(r => routineActiveOn(r, todayStr));
             listEl.innerHTML = dayRoutines.length === 0
