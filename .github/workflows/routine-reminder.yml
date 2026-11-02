@@ -19,10 +19,21 @@ jobs:
   push:
     runs-on: ubuntu-latest
     steps:
+      # GitHub 예약 실행은 몇 시간씩 밀려 새벽에 도는 일이 잦다 → 예약(schedule)으로 실행됐는데
+      # 한국시간 20~23시가 아니면 보내지 않고 조용히 끝낸다. (외부 알람/수동 실행은 항상 보냄)
+      - name: Skip if too late
+        id: gate
+        run: |
+          H=$(TZ=Asia/Seoul date +%-H)
+          if [ "${{ github.event_name }}" = "schedule" ] && { [ "$H" -lt 20 ] || [ "$H" -gt 23 ]; }; then
+            echo "한국시간 $H시 — 예약 실행이 너무 늦어져서 이번엔 안 보내요"; echo "skip=1" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-node@v4
+        if: steps.gate.outputs.skip != '1'
         with:
           node-version: 20
       - name: Send push
+        if: steps.gate.outputs.skip != '1'
         env:
           VAPID_PUBLIC_KEY: BPguPnBa-bKEv95yVzCdDT0Wm8j1t2wKU6vPPL8wCq8NUFd9zbXKc4JrJKaZ4_drm-Um6VEQYvY9oD122FITS7Q
           VAPID_PRIVATE_KEY: ${{ secrets.DASSEOTTUNG_VAPID_PRIVATE_KEY }}
