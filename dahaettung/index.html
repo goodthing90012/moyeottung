@@ -2650,12 +2650,23 @@
         cycleRoutines.forEach(cr => {
             if (!cr.items || cr.items.length === 0) return;
             const rec = cycleDoneOn(cr, checkDateStr);
+            const isPast = checkDateStr < getTodayStr();
             if (rec) {
-                // 신은 기록 있음 → 완료 표시 (오늘이면 되돌리기 가능)
+                // 기록 있음 → 완료 표시. 그 날짜가 가장 최근 기록이면(오늘 포함) 되돌리기 가능
+                const canUndo = isToday || (isPast && cycleIsLatestRecord(cr, checkDateStr));
                 rHtml += `<div class="check-item">
-                    <div class="check-box done" ${isToday?`onclick="toggleCycle(${cr.id})"`:''}>✓</div>
+                    <div class="check-box done" ${canUndo?`onclick="toggleCycle(${cr.id}, '${checkDateStr}')"`:`onclick="cycleBlockedToast()"`}>✓</div>
                     <span class="check-emoji">${cr.emoji||'🔁'}</span>
                     <span class="check-name done">${escapeHtml(cr.name)}: ${escapeHtml(rec)}</span>
+                </div>`;
+            } else if (isPast && cycleActiveOnDay(cr, checkDateStr) && !cycleBeforeCreated(cr, checkDateStr)) {
+                // 지난 날짜에 깜빡한 순환 루틴 — 그 이후 기록이 없을 때만 그 날짜로 체크 가능(순서가 꼬이지 않게)
+                const c = cycleTodayItem(cr);
+                const blocked = cycleHasLaterRecord(cr, checkDateStr);
+                rHtml += `<div class="check-item" ${blocked?'style="opacity:.5;"':''}>
+                    <div class="check-box" onclick="${blocked?'cycleBlockedToast()':`toggleCycle(${cr.id}, '${checkDateStr}')`}"></div>
+                    <span class="check-emoji">${cr.emoji||'🔁'}</span>
+                    <span class="check-name">${escapeHtml(cr.name)}: <b>${escapeHtml(c.item)}</b></span>
                 </div>`;
             } else if (isToday && cycleActiveOnDay(cr, checkDateStr)) {
                 const c = cycleTodayItem(cr);
@@ -2960,10 +2971,17 @@
         syncAll();
     }
     // 체크 탭: 오늘 차례 착용/되돌리기 (오늘만)
-    function toggleCycle(id) {
+    // 순환 루틴 지난 날짜 체크 보조: 순서(currentIndex)가 꼬이지 않도록 '그 날짜 이후 기록이 없을 때'만 허용
+    function cycleHasLaterRecord(cr, dateStr) { return (cr.history || []).some(h => h.date > dateStr); }
+    function cycleIsLatestRecord(cr, dateStr) { return !!cycleDoneOn(cr, dateStr) && !cycleHasLaterRecord(cr, dateStr); }
+    function cycleBeforeCreated(cr, dateStr) { const c = routineCreatedStr(cr); return !!c && dateStr < c; }
+    function cycleBlockedToast() { showToast('이후 날짜에 순환 기록이 있어요 · 최근 체크를 먼저 풀고 이 날짜부터 체크해주세요'); }
+    function toggleCycle(id, dateStr) {
         const cr = cycleRoutines.find(x => x.id === id); if (!cr || !cr.items.length) return;
-        const today = getTodayStr();
+        const today = dateStr || getTodayStr();
+        if (today > getTodayStr()) return; // 미래 날짜는 체크 불가
         cr.history = cr.history || [];
+        if (cycleHasLaterRecord(cr, today)) { cycleBlockedToast(); return; }
         const recIdx = cr.history.findIndex(h => h.date === today);
         const len = cr.items.length;
         if (recIdx >= 0) {
