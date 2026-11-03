@@ -977,6 +977,13 @@
                     <option value="paused">😴 개봉 · 쉬는중</option>
                     <option value="empty">🙅‍♀️ 재고 없음</option>
                 </select>
+                <select id="sortProducts" class="filter-select" onchange="saveProductSort(); renderProducts()">
+                    <option value="latest">🕒 최근 등록순</option>
+                    <option value="oldest">📅 오래된 등록순</option>
+                    <option value="name">🔤 가나다순</option>
+                    <option value="stockDesc">📦 재고 많은순</option>
+                    <option value="stockAsc">🪫 재고 적은순</option>
+                </select>
             </div>
             <textarea id="filterSearch" placeholder="제품명 검색 (엔터로 여러 개 동시 검색)" rows="1"
                 style="width:100%; resize:none; font-size:13px; padding:8px 10px; border:1px solid var(--light-gray); border-radius:10px; box-sizing:border-box; font-family:inherit; line-height:1.5; overflow:hidden; margin-top:6px; color:#333;"
@@ -2520,7 +2527,32 @@
     };
     const getCategoryIcon = (name) => CATEGORY_ICONS[name] || "📂";
 
+    // ── 내 화장대 정렬 (필터·검색으로 걸러진 목록 안에서 정렬) — 고른 정렬은 이 기기에 기억 ──
+    const PRODUCT_SORT_KEY = STORAGE_KEY + '_sort';
+    function saveProductSort() {
+        try { localStorage.setItem(PRODUCT_SORT_KEY, document.getElementById('sortProducts').value); } catch (e) {}
+    }
+    function restoreProductSort() {
+        try {
+            const v = localStorage.getItem(PRODUCT_SORT_KEY), el = document.getElementById('sortProducts');
+            if (v && el && [...el.options].some(o => o.value === v)) el.value = v;
+        } catch (e) {}
+    }
+    function productSortComparator(mode) {
+        const regAt = (p) => getRegisteredAt(p) || (typeof p.id === 'number' ? p.id : 0);
+        const byName = (a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'ko');
+        const byLatest = (a, b) => (regAt(b) - regAt(a)) || (b.id - a.id);
+        switch (mode) {
+            case 'oldest':    return (a, b) => (regAt(a) - regAt(b)) || (a.id - b.id);
+            case 'name':      return (a, b) => byName(a, b) || byLatest(a, b);
+            case 'stockDesc': return (a, b) => ((b.stock || 0) - (a.stock || 0)) || byName(a, b);
+            case 'stockAsc':  return (a, b) => ((a.stock || 0) - (b.stock || 0)) || byName(a, b);
+            default:          return byLatest;
+        }
+    }
+    let productSortRestored = false;
     function renderProducts() {
+        if (!productSortRestored) { productSortRestored = true; restoreProductSort(); }
         saveToStorage();
         const listEl = document.getElementById('productList');
         if (!listEl) return;
@@ -2548,7 +2580,7 @@
             const matchStatus = (statusFilter === 'all' || getProductStatus(p) === statusFilter);
             const matchSearch = keywords.length === 0 || keywords.some(k => p.name.toLowerCase().includes(k));
             return matchCat && matchSched && matchStatus && matchSearch;
-        }).sort((a, b) => b.id - a.id);
+        }).sort(productSortComparator(document.getElementById('sortProducts') ? document.getElementById('sortProducts').value : 'latest'));
 
         // 활성 상품 개수 표시 (보관함 제외). 필터가 걸리면 '보이는 개수 (전체 N개)'
         const totalActive = products.filter(p => !p.archived).length;
