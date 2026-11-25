@@ -33,7 +33,7 @@
         input, textarea, select, .review-text, .review-fs-text, .review-preview { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
         html, body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: var(--bg); margin: 0; height: 100%; }
         
-        .phone-mockup { width: 100%; height: 100vh; background-color: var(--bg); overflow-y: auto; display: flex; flex-direction: column; position: relative; }
+        .phone-mockup { width: 100%; height: 100vh; height: 100dvh; /* dvh: 폰 실제 보이는 높이 — 100vh는 주소창/시스템바 뒤까지 잡혀 하단 탭이 가려짐 */ background-color: var(--bg); overflow-y: auto; display: flex; flex-direction: column; position: relative; }
         
         .header { background-color: var(--card); padding: 8px 16px 8px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 20; }
         .header-brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 22px; color: var(--primary); letter-spacing: -0.5px; }
@@ -256,7 +256,14 @@
             animation: sparkle-pop 0.55s ease-out forwards;
         }
 
-        .tab-bar { background: var(--card); border-top: 1px solid var(--light-gray); display: flex; height: 60px; z-index: 20; position: sticky; bottom: 0; }
+        .tab-bar { background: var(--card); border-top: 1px solid var(--light-gray); display: flex; height: 60px; z-index: 20; position: sticky; bottom: 0; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); }
+        .search-groups { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .sg-chip { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 99px; border: 1px solid #ddd; background: #fff; font-size: 12px; font-weight: 700; color: #555; cursor: pointer; font-family: inherit; }
+        .sg-chip.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .sg-chip.add { border-style: dashed; color: var(--gray); font-weight: 600; }
+        .sg-chip .sg-x { font-size: 11px; opacity: .8; padding-left: 2px; }
+        .sg-actions { width: 100%; display: flex; gap: 10px; font-size: 11px; margin-top: 2px; }
+        .sg-actions span { color: var(--primary); cursor: pointer; text-decoration: underline; }
         .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: var(--gray); cursor: pointer; font-weight: bold; }
         .tab-item.active { color: var(--primary); }
         .tab-icon { font-size: 18px; margin-bottom: 2px; }
@@ -304,6 +311,18 @@
             <div class="confirm-btn-row">
                 <button class="confirm-btn no" onclick="document.getElementById('openCountBoxOverlay').classList.remove('active')">취소</button>
                 <button class="confirm-btn yes" style="background:var(--primary, #FF5A5F);" onclick="confirmOpenCountBox()">개봉</button>
+            </div>
+        </div>
+    </div>
+    <div class="confirm-overlay" id="searchGroupOverlay">
+        <div class="confirm-box">
+            <p>🔖 검색 그룹 저장</p>
+            <div id="searchGroupPreview" style="font-size:11px; color:var(--gray); margin:-6px 0 8px; line-height:1.5;"></div>
+            <input type="text" id="searchGroupName" maxlength="20" placeholder="그룹 이름 (예: 토너류)"
+                style="width:100%; box-sizing:border-box; padding:10px; border-radius:10px; border:1px solid #ddd; font-size:14px; margin-bottom:14px;">
+            <div class="confirm-btn-row">
+                <button class="confirm-btn no" onclick="document.getElementById('searchGroupOverlay').classList.remove('active')">취소</button>
+                <button class="confirm-btn yes" onclick="confirmSaveSearchGroup()">저장</button>
             </div>
         </div>
     </div>
@@ -987,7 +1006,8 @@
             </div>
             <textarea id="filterSearch" placeholder="제품명 검색 (엔터로 여러 개 동시 검색)" rows="1"
                 style="width:100%; resize:none; font-size:13px; padding:8px 10px; border:1px solid var(--light-gray); border-radius:10px; box-sizing:border-box; font-family:inherit; line-height:1.5; overflow:hidden; margin-top:6px; color:#333;"
-                oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'; renderProducts();"></textarea>
+                oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px'; renderProducts(); renderSearchGroups();"></textarea>
+            <div id="searchGroups" class="search-groups"></div>
         </div>
 
         <!-- 메모 모아보기는 '목록을 보는 도구'라 필터 카드 아래에 두고 왼쪽 정렬한다.
@@ -1765,7 +1785,7 @@
     function saveToStorage() {
         let payload;
         try {
-            payload = JSON.stringify({ categories, schedules, products, reviews, routines, totalTungCount });
+            payload = JSON.stringify({ categories, schedules, products, reviews, routines, totalTungCount, searchGroups });
             localStorage.setItem(STORAGE_KEY, payload);
             localStorage.setItem(STORAGE_KEY + '_savedAt', String(Date.now()));
             lastStorageBytes = new Blob([payload]).size;
@@ -1828,7 +1848,7 @@
             exportedAt: new Date().toISOString(),
             app: 'dasseottung',
             version: 3,
-            categories, schedules, products, reviews, routines, totalTungCount,
+            categories, schedules, products, reviews, routines, totalTungCount, searchGroups,
             reviewFeatureEnabled,
             photos
         };
@@ -1862,6 +1882,7 @@
                 products = parsed.products;
                 reviews = Array.isArray(parsed.reviews) ? parsed.reviews : [];
                 routines = Array.isArray(parsed.routines) ? parsed.routines : [];
+                searchGroups = Array.isArray(parsed.searchGroups) ? parsed.searchGroups : [];
                 migrateRoutineSnapshots();
                 if (typeof parsed.totalTungCount === 'number') {
                     totalTungCount = parsed.totalTungCount;
@@ -1899,6 +1920,8 @@
     let reviews = (savedData && Array.isArray(savedData.reviews)) ? savedData.reviews : defaultReviews;
     let routines = (savedData && Array.isArray(savedData.routines)) ? savedData.routines : [];
     let totalTungCount = (savedData && typeof savedData.totalTungCount === 'number') ? savedData.totalTungCount : null;
+    // 내 화장대 검색 그룹: [{id, name, keywords:[...]}] — 자주 쓰는 여러 키워드 검색을 한 번에 불러오기
+    let searchGroups = (savedData && Array.isArray(savedData.searchGroups)) ? savedData.searchGroups : [];
     if (totalTungCount === null) {
         totalTungCount = products.reduce((sum, p) => sum + (p.tungHistory || []).length, 0);
     }
@@ -2550,9 +2573,75 @@
             default:          return byLatest;
         }
     }
+    // ── 검색 그룹 ──
+    function currentSearchKeywords() {
+        return (document.getElementById('filterSearch')?.value || '').split('\n').map(k => k.trim()).filter(Boolean);
+    }
+    function sameKeywords(a, b) {
+        const n = x => x.map(k => k.toLowerCase()).sort().join('\n');
+        return n(a) === n(b);
+    }
+    function setSearchText(keywords) {
+        const ta = document.getElementById('filterSearch'); if (!ta) return;
+        ta.value = keywords.join('\n');
+        ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px';
+        renderProducts(); renderSearchGroups();
+    }
+    function renderSearchGroups() {
+        const box = document.getElementById('searchGroups'); if (!box) return;
+        const cur = currentSearchKeywords();
+        const active = searchGroups.find(g => cur.length && sameKeywords(g.keywords, cur));
+        let html = searchGroups.map(g => {
+            const on = active && active.id === g.id;
+            return `<button class="sg-chip ${on ? 'on' : ''}" onclick="applySearchGroup(${g.id})">🔖 ${sgEsc(g.name)}${on ? `<span class="sg-x" onclick="event.stopPropagation(); deleteSearchGroup(${g.id})">✕</span>` : ''}</button>`;
+        }).join('');
+        if (cur.length && !active) html += `<button class="sg-chip add" onclick="openSaveSearchGroup()">＋ 이 검색을 그룹으로 저장</button>`;
+        box.innerHTML = html;
+        box.style.display = html ? 'flex' : 'none';
+    }
+    function applySearchGroup(id) {
+        const g = searchGroups.find(x => x.id === id); if (!g) return;
+        // 이미 켜진 그룹을 다시 누르면 검색 해제
+        if (sameKeywords(g.keywords, currentSearchKeywords())) setSearchText([]);
+        else setSearchText(g.keywords);
+    }
+    function openSaveSearchGroup() {
+        const kws = currentSearchKeywords(); if (!kws.length) { showToast('먼저 검색어를 입력해주세요'); return; }
+        document.getElementById('searchGroupPreview').textContent = '검색어: ' + kws.join(', ');
+        const inp = document.getElementById('searchGroupName'); inp.value = kws[0];
+        document.getElementById('searchGroupOverlay').classList.add('active');
+        setTimeout(() => { inp.focus(); inp.select(); }, 50);
+    }
+    function confirmSaveSearchGroup() {
+        const name = document.getElementById('searchGroupName').value.trim();
+        if (!name) { showToast('그룹 이름을 입력해주세요'); return; }
+        const kws = currentSearchKeywords();
+        const same = searchGroups.find(g => g.name === name);
+        if (same) same.keywords = kws; // 같은 이름이면 검색어만 덮어쓰기
+        else searchGroups.push({ id: Date.now(), name, keywords: kws });
+        document.getElementById('searchGroupOverlay').classList.remove('active');
+        saveToStorage(); renderSearchGroups();
+        showToast(same ? `🔖 [${name}] 그룹을 새 검색어로 바꿨어요` : `🔖 [${name}] 검색 그룹을 저장했어요`);
+    }
+    function sgEsc(t) { const d = document.createElement('span'); d.textContent = String(t); return d.innerHTML; }
+    // ✕는 실수 방지로 두 번 눌러야 삭제 (3초 안에 한 번 더)
+    let sgDeleteArmed = null, sgDeleteTimer = null;
+    function deleteSearchGroup(id) {
+        const g = searchGroups.find(x => x.id === id); if (!g) return;
+        if (sgDeleteArmed !== id) {
+            sgDeleteArmed = id; clearTimeout(sgDeleteTimer);
+            sgDeleteTimer = setTimeout(() => { sgDeleteArmed = null; }, 3000);
+            showToast(`✕를 한 번 더 누르면 [${g.name}] 그룹이 삭제돼요`);
+            return;
+        }
+        sgDeleteArmed = null; clearTimeout(sgDeleteTimer);
+        searchGroups = searchGroups.filter(x => x.id !== id);
+        saveToStorage(); setSearchText([]);
+        showToast(`🗑 [${g.name}] 그룹을 삭제했어요`);
+    }
     let productSortRestored = false;
     function renderProducts() {
-        if (!productSortRestored) { productSortRestored = true; restoreProductSort(); }
+        if (!productSortRestored) { productSortRestored = true; restoreProductSort(); setTimeout(renderSearchGroups, 0); }
         saveToStorage();
         const listEl = document.getElementById('productList');
         if (!listEl) return;
