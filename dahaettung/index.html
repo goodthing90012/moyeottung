@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>다했텅 - Da Haet Tung</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="icon-192.png" type="image/png">
@@ -28,9 +28,9 @@
         * { -webkit-tap-highlight-color: transparent; }
         html, body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: var(--bg); margin: 0; height: 100%; color: var(--text); }
 
-        .phone-mockup { width: 100%; height: 100vh; height: 100dvh; /* dvh: 폰 실제 보이는 높이 — 100vh는 주소창/시스템바 뒤까지 잡혀 하단 탭이 가려짐 */ background-color: var(--bg); overflow: hidden; display: flex; flex-direction: column; position: relative; }
+        .phone-mockup { /* 화면 네 모서리에 딱 붙여 고정 — vh/dvh 단위는 기기·브라우저마다 실제 보이는 높이와 달라 하단 탭이 화면 밖으로 밀렸음 */ position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: auto; height: auto; background-color: var(--bg); overflow: hidden; display: flex; flex-direction: column; }
 
-        .header { background-color: var(--card); padding: 10px 16px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 20; }
+        .header { background-color: var(--card); padding: calc(10px + env(safe-area-inset-top)) 16px 10px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 20; }
         .header-brand { display: flex; align-items: center; gap: 7px; font-weight: 800; font-size: 21px; color: var(--primary); letter-spacing: -0.5px; }
         .header-brand .mascot { font-size: 20px; }
         .header .subtitle { color: #111; font-weight: 400; font-size: 11px; margin-top: 2px; opacity: 0.5; }
@@ -231,7 +231,7 @@
         .standalone-block { background: #FFF7F1; border: 1px solid #FBEADD; border-radius: 12px; padding: 4px 10px; }
 
         /* 탭바 */
-        .tab-bar { background: var(--card); border-top: 1px solid var(--light-gray); display: flex; height: 60px; z-index: 20; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); }
+        .tab-bar { background: var(--card); border-top: 1px solid var(--light-gray); display: flex; height: calc(60px + env(safe-area-inset-bottom)); box-sizing: border-box; z-index: 20; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); }
         .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: var(--gray); cursor: pointer; font-weight: bold; }
         .tab-item.active { color: var(--primary); }
         .tab-icon { font-size: 19px; margin-bottom: 2px; }

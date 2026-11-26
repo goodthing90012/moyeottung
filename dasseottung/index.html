@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>다썼텅 - Das sutt Tung (V5.8)</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="icon-192.png" type="image/png">
@@ -33,9 +33,9 @@
         input, textarea, select, .review-text, .review-fs-text, .review-preview { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
         html, body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: var(--bg); margin: 0; height: 100%; }
         
-        .phone-mockup { width: 100%; height: 100vh; height: 100dvh; /* dvh: 폰 실제 보이는 높이 — 100vh는 주소창/시스템바 뒤까지 잡혀 하단 탭이 가려짐 */ background-color: var(--bg); overflow-y: auto; display: flex; flex-direction: column; position: relative; }
+        .phone-mockup { /* 화면 네 모서리에 딱 붙여 고정 — vh/dvh 단위는 기기·브라우저마다 실제 보이는 높이와 달라 하단 탭이 화면 밖으로 밀렸음 */ position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: auto; height: auto; background-color: var(--bg); overflow-y: auto; display: flex; flex-direction: column; }
         
-        .header { background-color: var(--card); padding: 8px 16px 8px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 20; }
+        .header { background-color: var(--card); padding: calc(8px + env(safe-area-inset-top)) 16px 8px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 20; }
         .header-brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 22px; color: var(--primary); letter-spacing: -0.5px; }
         .header span { color: #111; font-weight: 400; font-size: 12px; display: block; margin-top: 2px; opacity: 0.6; }
         
@@ -256,7 +256,7 @@
             animation: sparkle-pop 0.55s ease-out forwards;
         }
 
-        .tab-bar { background: var(--card); border-top: 1px solid var(--light-gray); display: flex; height: 60px; z-index: 20; position: sticky; bottom: 0; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); }
+        .tab-bar { background: var(--card); border-top: 1px solid var(--light-gray); display: flex; height: calc(60px + env(safe-area-inset-bottom)); box-sizing: border-box; z-index: 20; position: sticky; bottom: 0; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); }
         .search-groups { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
         .sg-chip { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 99px; border: 1px solid #ddd; background: #fff; font-size: 12px; font-weight: 700; color: #555; cursor: pointer; font-family: inherit; }
         .sg-chip.on { background: var(--primary); border-color: var(--primary); color: #fff; }
